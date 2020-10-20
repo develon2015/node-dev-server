@@ -1,0 +1,16 @@
+{
+  "name": "first",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start:dev": "node ./watch.js",
+    "start:watch": "webpack --watch",
+    "build": "webpack --env build",
+    "rebuild": "webpack --env rebuild"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "webpack": "^5.1.3",
+    "webpack-cli": "^4.1.0"
+  }
+}
