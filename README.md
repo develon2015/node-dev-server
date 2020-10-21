@@ -5,14 +5,14 @@ Node.js后端开发自动重启以apply更新, 对标前端开发工具webpack-d
 
 ## 原理
 
-读取并处理webpack.config.js文件, 使用 ![webpack](https://github.com/webpack/webpack) 提供的API函数 -- `webpack()` 编译并处理编译状态。
+读取并处理webpack.config.js文件, 使用 ![webpack](https://webpack.js.org/1fcab817090e78435061.svg) 提供的API函数 -- `webpack()` 编译并处理编译状态。
 ```
 const webpack: (options: Configuration, callback?: CallbackWebpack<Stats>) => Compiler
 const webpack: (options: Configuration[], callback?: CallbackWebpack<Stats>) => Compiler
 ```
 
 
-## usage
+## Usage
 
 ```
 $ yarn start:dev uexpress
