@@ -71,6 +71,7 @@ module.exports = (env = {}, argv = { entry: [] }) => {
     }
     if (env.rebuild || env.build) { // 编译最终产物
         config.mode = 'production';
+        // delete config.externals; // 捆绑依赖
     }
     if (env.watch) { // watch模式持续编译，如果调用webpack(config, callback)时提供了回调，则可监听编译完成事件
         config.watch = true;

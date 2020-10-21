@@ -1,16 +1,19 @@
 import express from 'express';
-import os from 'os';
+require('colors');
 
-console.log(os.networkInterfaces());
+function init() {
+    const app = express();
+    app.use((req, res, next) => {
+        next();
+    });
+    app.use((req, res, next) => {
+        res.send({ code: 404 });
+    });
+    app.listen(80, () => {
+        console.log('服务器已启动'.green);
+    });
+}
 
-console.log(888);
-const app = express();
-app.all((req, res, next) => {
-    next();
-});
-app.all((req, res, next) => {
-    res.send({ code: 404 });
-});
-app.listen(80, () => {
-    console.log('服务器已启动');
-});
+void function main() {
+    init();
+}()
