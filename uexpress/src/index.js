@@ -1,6 +1,9 @@
 import express from 'express';
-import { applyWebpackOptionsDefaults } from 'webpack/lib/config/defaults';
+import os from 'os';
 
+console.log(os.networkInterfaces());
+
+console.log(888);
 const app = express();
 app.all((req, res, next) => {
     next();

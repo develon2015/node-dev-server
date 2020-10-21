@@ -29,9 +29,9 @@
   integrity sha1-9MfsQ+gbMZqYFRFQMXCfJph4kfA=
 
 "@types/node@*":
-  version "14.11.10"
-  resolved "https://registry.npm.taobao.org/@types/node/download/@types/node-14.11.10.tgz?cache=0&sync_timestamp=1602874307949&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Fnode%2Fdownload%2F%40types%2Fnode-14.11.10.tgz#8c102aba13bf5253f35146affbf8b26275069bef"
-  integrity sha1-jBAquhO/UlPzUUav+/iyYnUGm+8=
+  version "14.14.0"
+  resolved "https://registry.npm.taobao.org/@types/node/download/@types/node-14.14.0.tgz?cache=0&sync_timestamp=1603194099141&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Fnode%2Fdownload%2F%40types%2Fnode-14.14.0.tgz#f1091b6ad5de18e8e91bdbd43ec63f13de372538"
+  integrity sha1-8QkbatXeGOjpG9vUPsY/E943JTg=
 
 "@webassemblyjs/ast@1.9.0":
   version "1.9.0"
@@ -331,6 +331,11 @@ colorette@^1.2.1:
   resolved "https://registry.npm.taobao.org/colorette/download/colorette-1.2.1.tgz?cache=0&sync_timestamp=1593955804228&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fcolorette%2Fdownload%2Fcolorette-1.2.1.tgz#4d0b921325c14faf92633086a536db6e89564b1b"
   integrity sha1-TQuSEyXBT6+SYzCGpTbbbolWSxs=
 
+colors@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.npm.taobao.org/colors/download/colors-1.4.0.tgz#c50491479d4c1bdaed2c9ced32cf7c7dc2360f78"
+  integrity sha1-xQSRR51MG9rtLJztMs98fcI2D3g=
+
 command-line-usage@^6.1.0:
   version "6.1.0"
   resolved "https://registry.npm.taobao.org/command-line-usage/download/command-line-usage-6.1.0.tgz#f28376a3da3361ff3d36cfd31c3c22c9a64c7cb6"
@@ -427,9 +432,9 @@ end-of-stream@^1.1.0:
     once "^1.4.0"
 
 enhanced-resolve@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.npm.taobao.org/enhanced-resolve/download/enhanced-resolve-5.2.0.tgz#3db3307a608f236f33aeea79303d32915792cbab"
-  integrity sha1-PbMwemCPI28zrup5MD0ykVeSy6s=
+  version "5.3.0"
+  resolved "https://registry.npm.taobao.org/enhanced-resolve/download/enhanced-resolve-5.3.0.tgz?cache=0&sync_timestamp=1603192989229&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fenhanced-resolve%2Fdownload%2Fenhanced-resolve-5.3.0.tgz#14be504e14ad58e9821a311ea6a9037c716786d9"
+  integrity sha1-FL5QThStWOmCGjEepqkDfHFnhtk=
   dependencies:
     graceful-fs "^4.2.4"
     tapable "^2.0.0"
