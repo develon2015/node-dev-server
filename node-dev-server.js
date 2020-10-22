@@ -1,44 +1,57 @@
 #!/usr/bin/env node
 const webpack = require('webpack');
-const getWebpackConfig = require('./webpack.config');
 const child_process = require('child_process');
 const fs = require('fs');
 require('colors');
+const path = require('path');
 
 /**
- * 项目目录名称
- * 我想应该没有人用双引号等特殊字符吧
+ * 项目根目录
  */
 let project = undefined;
 /**
  * Node引擎的绝对路径, 通过process.argv0获取
  */
-let path_to_node = 'node';
+const path_to_node = process.argv0 || 'node';
 /**
  * 是否清理dist目录
  */
 let rebuild = false;
 /**
- * 当前启动的Node项目进程IP
+ * 当前启动的Node项目进程ID
  */
 let pid = -1; // Node进程
 /**
- * 新进程的工作目录
+ * 新进程的工作目录, 由项目根目录下的webpack配置文件webpack.config.js指定
+ * 默认是`${project}/dist`
  */
 let dirDist = process.cwd;
+/**
+ * 是否监测
+ */
+let watch = true;
 
 /**
- * 构建自己的webpack CLI工具
- * $ node ./watch.js ...param
- * param将被传为config(env, argv)函数形参 -- argv.entry
- * @param {string[]} argv Node.js命令行参数, webpack.config.js中的argv.entry
+ * 调用webpack API, 构建自己的CLI工具
+ * $ node ./cli.js ...argv
+ * 在webpack-cli中, argv将被传为config(env, argv)函数形参 -- argv.entry, 并强制改写最终的config对象的entry字段
+ * @param {string[]} argv Node进程命令行参数
  */
 function callWebpack(argv) {
     if (argv.length < 1) {
-        throw new Error('请提供项目名称');
+        project = process.cwd();
+    } else {
+        project = path.resolve(process.cwd(), argv[0]);
     }
-    project = argv[0] || undefined;
-    let config = getWebpackConfig({ rebuild, watch: true, project, }, { color: true, entry: [/*此处并不会影响config*/] }); // call ./webpack.config.js
+    console.log('工作目录:', project);
+    const getWebpackConfig = require(path.resolve(project, 'webpack.config.js')); // webpack.config.js文件导出的类型有：对象、Promise、函数
+    let config = getWebpackConfig;
+    if (typeof getWebpackConfig === 'function') {
+        config = getWebpackConfig({ rebuild, watch, project, }, { color: true, entry: [/*此处并不会影响config*/] }); // call ./webpack.config.js
+        if (config.constructor === Promise) {
+            throw new Error('暂时不知如何处理Promise');
+        }
+    }
     dirDist = config.output.path;
     // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
     // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
@@ -56,6 +69,11 @@ function callWebpack(argv) {
             });
         }
         console.log(`耗时：${(state.compilation.endTime - state.compilation.startTime)} ms`);
+        if (watch) {
+            console.log(`等待文件变化，或使用命令“rs"重启程序`);
+        } else {
+            console.log('未启用监听，等待程序结束...');
+        }
     });
 }
 
@@ -63,11 +81,10 @@ function callWebpack(argv) {
 void function main() {
     consoleHook();
     process.title = 'node-dev-server';
-    path_to_node = process.argv0;
     process.once('SIGINT', onSIGINT); // 监听^C事件
     try {
         callWebpack(process.argv.splice(2)); // node[.exe] path_to_watch.js ...param
-        repl();
+        watch && repl();
     } catch (error) {
         console.error(error.message.red);
     }
@@ -146,14 +163,14 @@ function repl() {
         if (input === 'rs') {
             console.log('重启应用程序...');
             pid = restartNodeProject(pid, dirDist);
-            console.log(`项目 ${project} 已重启, root PID: ${pid}`);
+            pid !== -1 && console.log(`项目 ${project} 已重启, root PID: ${pid}`);
         }
     })
     // rl.on('SIGINT', () => {
     rl.on('close', () => {
-        console.log('关闭 node-dev-server...');
+        console.log('关闭 node-dev-server ...');
         if (process.platform.match(/win/)) { // win32
-            console.log(`关闭 ${project}...`);
+            console.log(`关闭 ${project} ...`);
             child_process.execSync(`taskkill /F /PID ${process.ppid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
         }
         process.kill(process.ppid, 'SIGINT');

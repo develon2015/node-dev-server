@@ -1,0 +1,12 @@
+{
+  "name": "uexpress",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start:dev": "node-dev-serve"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "express": "^4.17.1"
+  }
+}

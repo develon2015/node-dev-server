@@ -12,18 +12,33 @@ const webpack: (options: Configuration[], callback?: CallbackWebpack<Stats>) => 
 ```
 
 
+## Install
+
+```
+$ yarn install && yarn link
+$ node-dev-serve
+```
+
+
 ## Usage
 
 ```
-$ yarn start:dev uexpress
-Active code page: 65001
-导入：D:\Code\Node\pure-node\webpack-usage => D:\Code\Node\pure-node\webpack-usage\uexpress\src
-导入：D:\Code\Node\pure-node\webpack-usage\uexpress\src => colors
-运行时依赖: colors由node_modules提供 => colors = require('colors')
-导入：D:\Code\Node\pure-node\webpack-usage\uexpress\src => express
-运行时依赖: express由node_modules提供 => express = require('express')
-编译完成
-start "uexpress" /WAIT cmd /c "cd /D "D:\Code\Node\pure-node\webpack-usage\uexpress\dist" && "C:\Program Files\nodejs\node.exe" ./main.js 2>nul <nul"
-项目已启动, root PID：34672
-耗时：129 ms
+$ cd uexpress && yarn install
+...
+$ node-dev-serve uexpress
+[I] 工作目录: C:\Users\ly\Desktop\uexpress
+[I] 导入：C:\Users\ly\Desktop\uexpress => C:\Users\ly\Desktop\uexpress\src
+[I] 导入：C:\Users\ly\Desktop\uexpress\src => colors
+[I] 运行时依赖: colors由node_modules提供 => colors = require('colors')
+[I] 导入：C:\Users\ly\Desktop\uexpress\src => express
+[I] 运行时依赖: express由node_modules提供 => express = require('express')
+[I] 编译完成
+[I] start "C:\Users\ly\Desktop\uexpress" /WAIT cmd /c "cd /D "C:\Users\ly\Desktop\uexpress\dist" && "C:\Program Files\nodejs\node.exe" ./main.js & pause"
+[I] 项目 C:\Users\ly\Desktop\uexpress 已启动, root PID：14104
+[I] 耗时：78 ms
+[I] 等待文件变化，或使用命令“rs"重启程序
+[I] 关闭 node-dev-server ...
+[I] 关闭 C:\Users\ly\Desktop\uexpress ...
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
 ```
