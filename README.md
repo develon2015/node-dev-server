@@ -15,17 +15,26 @@ const webpack: (options: Configuration[], callback?: CallbackWebpack<Stats>) => 
 ## Install
 
 ```
-$ yarn install && yarn link
-$ node-dev-serve
+$ yarn global add @develon/node-dev-server
+```
+or
+```
+$ npm install --global @develon/node-dev-server
 ```
 
 
 ## Usage
 
+Clone this repository:
 ```
-$ cd uexpress && yarn install
+$ git clone https://github.com/develon2015/node-dev-server
+```
+
+Compile and watch a project:
+```
+$ cd node-dev-server/uexpress && yarn install
 ...
-$ node-dev-serve uexpress
+$ node-dev-server uexpress
 [I] 工作目录: C:\Users\ly\Desktop\uexpress
 [I] 导入：C:\Users\ly\Desktop\uexpress => C:\Users\ly\Desktop\uexpress\src
 [I] 导入：C:\Users\ly\Desktop\uexpress\src => colors

@@ -1,17 +1,32 @@
 {
   "name": "node-dev-server",
   "version": "1.0.0",
-  "license": "MIT",
+  "description": "Serves a Node.js app. Restart the app on changes.",
   "bin": {
-    "node-dev-serve": "./bin/main.js"
+    "node-dev-server": "./bin/main.js"
   },
   "scripts": {
     "test": "cd uexpress && yarn start:dev",
-    "test2": "node-dev-serve uexpress"
+    "test2": "node-dev-server uexpress"
   },
   "dependencies": {
     "colors": "^1.4.0",
     "webpack": "^5.1.3",
     "webpack-cli": "^4.1.0"
-  }
+  },
+  "author": "develon <develon@qq.com>",
+  "homepage": "https://github.com/develon2015/node-dev-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/develon2015/node-dev-server.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "node.js",
+    "server-development",
+    "webpack-dev-server"
+  ],
+  "license": "MIT"
 }

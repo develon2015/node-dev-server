@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start:dev": "node-dev-serve"
+    "start:dev": "node-dev-server"
   },
   "dependencies": {
     "colors": "^1.4.0",
