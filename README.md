@@ -23,6 +23,7 @@ Active code page: 65001
 导入：D:\Code\Node\pure-node\webpack-usage\uexpress\src => express
 运行时依赖: express由node_modules提供 => express = require('express')
 编译完成
+start "uexpress" /WAIT cmd /c "cd /D "D:\Code\Node\pure-node\webpack-usage\uexpress\dist" && "C:\Program Files\nodejs\node.exe" ./main.js 2>nul <nul"
 项目已启动, root PID：34672
 耗时：129 ms
 ```

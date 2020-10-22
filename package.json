@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start:dev": "chcp 65001 & node ./watch.js",
+    "start:dev": "chcp 65001 & node ./node-dev-server.js",
     "start:watch": "webpack --watch",
     "build": "webpack --env build",
     "rebuild": "webpack --env rebuild"
