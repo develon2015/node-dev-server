@@ -173,6 +173,7 @@ function repl() {
             child_process.execSync(`taskkill /F /PID ${process.ppid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
         }
         process.kill(process.ppid, 'SIGINT');
+        process.kill(process.pid, 'SIGINT');
     });
 }
 
