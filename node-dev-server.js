@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 const webpack = require('webpack');
 const child_process = require('child_process');
 const fs = require('fs');
