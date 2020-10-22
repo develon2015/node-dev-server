@@ -90,8 +90,8 @@ function restartNodeProject_win(pid, dirDist) {
             console.error(`杀进程失败, 请自行确认`.red);
         }
         // 构建cmd命令, 进入dist目录执行main.js或index.js或者bundle.js等目标
-        // let cmd = `cd /D "${dirDist.replace(/"/g, `""`)/*工作路径需要转义双引号*/}" && false 2>nul `;
-        let cmd = `cd /D "${dirDist.replace(/"/g, `""`)/*工作路径需要转义双引号*/}" `;
+        // let cmd = `cd /D "${dirDist.replace(/"/g, `""`)/*cmd下可以使用两个双引号转义双引号,但不适用于一些特殊的内置命令*/}" && false 2>nul `;
+        let cmd = `cd /D "${dirDist}" `; // cd命令居然可以不加双引号地跳转到路径中含有空格的目录, 不过不建议这样做
         let finded = false;
         let files = ['main', 'index', 'bundle'];
         for (file of files) {
@@ -100,7 +100,7 @@ function restartNodeProject_win(pid, dirDist) {
             // cmd += `|| "${path_to_node}" ./${file}.js 2>nul <nul`;
             if (fs.existsSync(`${dirDist}/${file}.js`)) { // 找寻入口文件
                 // cmd += `&& "${path_to_node}" ./${file}.js <nul`; // 服务端程序通常是不需要交互的, 关闭输入流
-                cmd += `&& "${path_to_node/*此处却又不可转义双引号, 可恶的微软*/}" ./${file}.js`; // 服务端程序需要交互
+                cmd += `&& "${path_to_node/*此处必须使用双引号将Node引擎绝对路径包含,避免有空格*/}" ./${file}.js`; // 服务端程序需要交互
                 finded = true;
                 break;
             }
