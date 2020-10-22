@@ -18,6 +18,14 @@ let path_to_node = 'node';
  * 是否清理dist目录
  */
 let rebuild = false;
+/**
+ * 当前启动的Node项目进程IP
+ */
+let pid = -1; // Node进程
+/**
+ * 新进程的工作目录
+ */
+let dirDist = process.cwd;
 
 /**
  * 构建自己的webpack CLI工具
@@ -31,8 +39,7 @@ function callWebpack(argv) {
     }
     project = argv[0] || undefined;
     let config = getWebpackConfig({ rebuild, watch: true, project, }, { color: true, entry: [/*此处并不会影响config*/] }); // call ./webpack.config.js
-    const dirDist = config.output.path;
-    let pid = -1; // Node进程
+    dirDist = config.output.path;
     // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
     // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
     // state包含编译时间、编译hash等信息。
@@ -54,10 +61,13 @@ function callWebpack(argv) {
 
 /** 主函数，立即执行 */
 void function main() {
+    consoleHook();
     process.title = 'node-dev-server';
     path_to_node = process.argv0;
+    process.once('SIGINT', onSIGINT); // 监听^C事件
     try {
         callWebpack(process.argv.splice(2)); // node[.exe] path_to_watch.js ...param
+        repl();
     } catch (error) {
         console.error(error.message.red);
     }
@@ -76,18 +86,21 @@ function restartNodeProject_win(pid, dirDist) {
     try {
         try {
             pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
-        } catch (error) { }
+        } catch (error) {
+            console.error(`杀进程失败, 请自行确认`.red);
+        }
         // 构建cmd命令, 进入dist目录执行main.js或index.js或者bundle.js等目标
         // let cmd = `cd /D "${dirDist.replace(/"/g, `""`)/*工作路径需要转义双引号*/}" && false 2>nul `;
         let cmd = `cd /D "${dirDist.replace(/"/g, `""`)/*工作路径需要转义双引号*/}" `;
         let finded = false;
-        let files =['main', 'index', 'bundle'];
+        let files = ['main', 'index', 'bundle'];
         for (file of files) {
             // cmd += `|| "${path_to_node}" ./${file}.js`; // 找不到文件时会报错
             // cmd += `|| "${path_to_node}" ./${file}.js 2>nul`; // 无法使用console.error()
-            // cmd += `|| "${path_to_node/*此处却又不可转义双引号, 可恶的微软*/}" ./${file}.js 2>nul <nul`;
-            if (fs.existsSync(`${dirDist}/${file}.js`)) {
-                cmd += `&& "${path_to_node/*此处却又不可转义双引号, 可恶的微软*/}" ./${file}.js 2>nul <nul`;
+            // cmd += `|| "${path_to_node}" ./${file}.js 2>nul <nul`;
+            if (fs.existsSync(`${dirDist}/${file}.js`)) { // 找寻入口文件
+                // cmd += `&& "${path_to_node}" ./${file}.js <nul`; // 服务端程序通常是不需要交互的, 关闭输入流
+                cmd += `&& "${path_to_node/*此处却又不可转义双引号, 可恶的微软*/}" ./${file}.js`; // 服务端程序需要交互
                 finded = true;
                 break;
             }
@@ -95,7 +108,7 @@ function restartNodeProject_win(pid, dirDist) {
         if (!finded) throw new Error(`没有发现以下入口文件：${files.join('.js ')}`);
         // 使用start命令启动一个单独的窗口运行指定的程序或命令, "taskkill /F /T /PID <pid>"可杀死cmd窗口下的子进程树
         // "/WAIT"参数非常关键, 如果启动应用程序后不等待它终止就退出运行start命令的cmd.exe进程, 那么无法通过该root进程的pid追踪进程树
-        const newCmd = `start "${project}" /WAIT cmd /c "${cmd}"`;
+        const newCmd = `start "${project}" /WAIT cmd /c "${cmd} & pause"`;
         // 启动shell执行命令
         console.log(newCmd);
         const cp = child_process.exec(newCmd);
@@ -105,4 +118,58 @@ function restartNodeProject_win(pid, dirDist) {
         console.error('启动失败'.red);
     }
     return -1;
+}
+
+/**
+ * 处理Ctrl+C中断信号
+ */
+function onSIGINT() {
+    try {
+        console.log('请再按一次^C以退出node-der-server'); // 此时进程即将退出, 出于对Windows用户的同情进行提示
+    } catch (error) {
+        console.log(error);
+    }
+    process.exit(0);
+}
+
+/**
+ * 交互界面
+ */
+function repl() {
+    const readline = require('readline');
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+    rl.on('line', (input) => {
+        if (input === 'rs') {
+            console.log('重启应用程序...');
+            pid = restartNodeProject(pid, dirDist);
+            console.log(`项目 ${project} 已重启, root PID: ${pid}`);
+        }
+    })
+    // rl.on('SIGINT', () => {
+    rl.on('close', () => {
+        console.log('关闭 node-dev-server...');
+        if (process.platform.match(/win/)) { // win32
+            console.log(`关闭 ${project}...`);
+            child_process.execSync(`taskkill /F /PID ${process.ppid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
+        }
+        process.kill(process.ppid, 'SIGINT');
+    });
+}
+
+function consoleHook() {
+    const _log = console.log;
+    const _err = console.error;
+    console.log = (...params) => {
+        _log('[I]'.green, ...params);
+    };
+    console.error = (...params) => {
+        _err('[E]'.red, ...params);
+    };
+    if (process.platform.match(/win/)) { // win32
+        child_process.execSync('chcp 65001'); // 解决Windows下输出乱码问题
+    }
 }
