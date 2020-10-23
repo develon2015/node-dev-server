@@ -1,6 +1,8 @@
 # node-dev-server
 
 Node.js后端开发自动重启以apply更新, 对标前端开发工具webpack-dev-server.
+后人有诗云：
+> node-dev-server之于后端，webpack-dev-server之于前端
 
 
 ## 原理

@@ -1,8 +1,9 @@
 {
   "name": "@develon/node-dev-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Serves a Node.js app. Restart the app on changes.",
   "bin": {
+    "nds": "./bin/main.js",
     "node-dev-server": "./bin/main.js"
   },
   "scripts": {

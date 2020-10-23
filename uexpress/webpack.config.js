@@ -1,5 +1,4 @@
 const path = require('path');
-require('colors');
 
 function getWebpackConfigByName(projectName) {
     const DIR_PROJECT = path.resolve(__dirname, projectName);
@@ -38,7 +37,7 @@ function getWebpackConfigByName(projectName) {
                         if (!request.includes('!')) {
                             // 替换node_modules依赖请求
                             let instruction = `require('${request}')`;
-                            console.log('运行时依赖:', `${request}由node_modules提供 => ${request} = ${instruction}`.green);
+                            console.log('运行时依赖:', `${request}由node_modules提供 => ${request} = ${instruction}`);
                             return callback(/*没有错误*/null, instruction);
                         }
                     }

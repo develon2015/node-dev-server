@@ -1,13 +1,24 @@
 const webpack = require('webpack');
 const child_process = require('child_process');
 const fs = require('fs');
-require('colors');
 const path = require('path');
+const { consoleHook, _log, } = require('./console-hook');
+consoleHook();
+const { excludeNodeModules, } = require('./webpack-externals');
 
 /**
  * 项目根目录
  */
 let project = undefined;
+/**
+ * package.json文件描述JSON对象
+ */
+let packageJSON = {};
+/**
+ * 项目名称，从package.json读取
+ * 用来设置cmd窗口标题
+ */
+let projectName = 'Node Project';
 /**
  * Node引擎的绝对路径, 通过process.argv0获取
  */
@@ -42,60 +53,95 @@ function callWebpack(argv) {
     } else {
         project = path.resolve(process.cwd(), argv[0]);
     }
-    console.log('工作目录:', project);
-    const getWebpackConfig = require(path.resolve(project, 'webpack.config.js')); // webpack.config.js文件导出的类型有：对象、Promise、函数
-    let config = getWebpackConfig;
-    if (typeof getWebpackConfig === 'function') {
-        config = getWebpackConfig({ rebuild, watch, project, }, { color: true, entry: [/*此处并不会影响config*/] }); // call ./webpack.config.js
-        if (config.constructor === Promise) {
-            throw new Error('暂时不知如何处理Promise');
-        }
+    console.info('项目根目录:', project);
+    if (!fs.existsSync(project)) throw new Error('工程不存在！');
+    // 解析项目根目录的package.json项目描述文件和webpack配置文件
+    const pathWebpackConfigFile = path.resolve(project, 'webpack.config.js');
+    const pathPackageJSONFile = path.resolve(project, 'package.json');
+    if (!fs.existsSync(pathPackageJSONFile)) { // 没有定义package.json文件，不是一个标准的Node.js项目
+        console.warn('没有定义 package.json 文件，请初始化 Node.js 项目');
+        projectName = project;
+    } else {
+        packageJSON = require(pathPackageJSONFile);
+        projectName = packageJSON.name || project;
     }
-    dirDist = config.output.path;
-    // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
-    // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
-    // state包含编译时间、编译hash等信息。
-    let compiler = webpack(config, (error, state) => {
-        if (error) { // Webpack配置出错, 强制结束node-dev-server
-            console.error(error.message);
-            forceExit('配置出错, Webpack拒绝编译');
-        }
-        if (state.compilation.errors.length === 0) {
-            console.log('编译完成'.green);
-            pid = restartNodeProject(pid, dirDist);
-            pid !== -1 && console.log(`项目 ${project} 已启动, root PID：${pid}`.green);
-        } else {
-            console.error('编译失败'.red);
-            // console.error(state.compilation.errors);
-            state.compilation.errors.forEach(it => {
-                console.error(it.message.red);
-            });
-        }
-        console.log(`耗时：${(state.compilation.endTime - state.compilation.startTime)} ms`);
-        if (watch) {
-            console.log(`等待文件变化，或使用命令“rs"重启程序`);
-        } else {
-            console.log('未启用监听，等待程序结束...');
-        }
+    let config = {}; // 缺省config对象
+    if (!fs.existsSync(pathWebpackConfigFile)) { // 没有定义webpack.config.js文件
+        // throw new Error('没有发现配置文件：webpack.config.js');
+        // 没有必要抛异常，因为Webpack5开箱即用
+        console.warn('没有定义 webpack.config.js 文件，默认入口：src/index.js，默认输出：dist/main.js');
+    } else {
+        config = require(pathWebpackConfigFile); // webpack.config.js文件导出的类型有：对象、Promise、函数
+    }
+    // 如果项目的webpack配置文件导出的是一个函数, 则立即调用该函数, 可能直接返回webpack.config, 也可能返回一个Promise对象
+    if (typeof config === 'function') {
+        config = config({ rebuild, watch, project, }, { color: true, entry: [/*此处并不会影响config*/] });
+    }
+    let awaitConfig = Promise.resolve(config); // 构造缺省Promise，设置resolevdConfig缺省值为config
+    if (config.constructor === Promise) { // 检测导出的config是否是一个Promise对象
+        awaitConfig = config;
+    }
+    awaitConfig.then((resolvedConfig) => {
+        // 如果config不是Promise或返回Promise对象的函数, 则resolevdConfig不变，仍是config
+        // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
+        // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
+        // state包含编译时间、编译hash等信息。
+        let configFromNDS = {
+            externals: excludeNodeModules,
+            watch,
+        };
+        let mergedConfig = { ...configFromNDS, ...resolvedConfig };
+        mergedConfig.output = {
+            path: path.resolve(projectName, 'dist'),
+        };
+        console.info('最终Webpack配置:', mergedConfig);
+        dirDist = mergedConfig.output.path;
+        // 如果传给webpack() API的第一个参数是数组，则error为ValidationError时至少有一个配置对象不合法
+        // 同时state同样是对应的数组: MultiStatsMultiStats { stats: [ Stats { compilation: [Compilation] }, Stats { compilation: [Compilation] } ] }
+        let compiler = webpack(mergedConfig, (error, state) => {
+            if (error) { // Webpack配置出错, 强制结束node-dev-server
+                console.error(error.message);
+                forceExit('配置出错, Webpack拒绝编译');
+            }
+            if (state.compilation.errors.length === 0) {
+                console.info('编译完成！');
+                pid = restartNodeProject(pid, dirDist);
+                pid !== -1 && console.info(`项目 ${projectName} 已启动, root PID：${pid}`);
+            } else {
+                console.error('编译失败！');
+                state.compilation.errors.forEach(it => {
+                    console.error(it.message);
+                    _log(it); // 使用原生输出函数显示具体编译错误
+                });
+            }
+            console.log(`耗时：${(state.compilation.endTime - state.compilation.startTime)} ms`);
+            if (watch) {
+                console.log(`等待文件变化，或使用命令“rs"重启程序`);
+            } else {
+                console.log('未启用监听，等待程序结束...');
+            }
+        });
+    }).catch((error) => {
+        forceExit(error.message);
     });
 }
 
 /** 主函数，立即执行 */
 void function main() {
-    consoleHook();
     process.title = 'node-dev-server';
     process.once('SIGINT', onSIGINT); // 监听^C事件
     try {
         callWebpack(process.argv.splice(2)); // node[.exe] path_to_watch.js ...param
         watch && repl();
     } catch (error) {
-        console.error(error.message.red);
+        console.error(error.message);
     }
 }()
 
 /** 重启项目Node进程 */
 function restartNodeProject(pid, dirDist) {
-    return restartNodeProject_win(pid, dirDist);
+    if (process.platform.match(/win/i)) return restartNodeProject_win(pid, dirDist);
+    if (process.platform.match(/(linux|unix)/i)) return restartNodeProject_win(pid, dirDist);
 }
 
 /**
@@ -107,7 +153,7 @@ function restartNodeProject_win(pid, dirDist) {
         try {
             pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
         } catch (error) {
-            console.error(`杀进程失败, 请自行确认`.red);
+            console.error(`杀进程失败, 请自行确认`);
         }
         // 构建cmd命令, 进入dist目录执行main.js或index.js或者bundle.js等目标
         // let cmd = `cd /D "${dirDist.replace(/"/g, `""`)/*cmd下可以使用两个双引号转义双引号,但不适用于一些特殊的内置命令*/}" && false 2>nul `;
@@ -128,26 +174,27 @@ function restartNodeProject_win(pid, dirDist) {
         if (!finded) throw new Error(`没有发现以下入口文件：${files.join('.js ')}`);
         // 使用start命令启动一个单独的窗口运行指定的程序或命令, "taskkill /F /T /PID <pid>"可杀死cmd窗口下的子进程树
         // "/WAIT"参数非常关键, 如果启动应用程序后不等待它终止就退出运行start命令的cmd.exe进程, 那么无法通过该root进程的pid追踪进程树
-        const newCmd = `start "${project}" /WAIT cmd /c "${cmd} & pause"`;
+        const newCmd = `start "${projectName}" /WAIT cmd /c "${cmd} & pause"`;
         // 启动shell执行命令
         console.log(newCmd);
         const cp = child_process.exec(newCmd);
         return cp.pid;
     } catch (error) {
-        console.error(error);
-        console.error('启动失败'.red);
+        console.error(error.message);
+        console.error('启动失败');
     }
     return -1;
 }
 
 /**
  * 处理Ctrl+C中断信号
+ * 由于使用了repl技术，该函数通常不会发挥作用，除非遇到^D中断
  */
 function onSIGINT() {
     try {
         console.log('请再按一次^C以退出node-der-server'); // 此时进程即将退出, 出于对Windows用户的同情进行提示
     } catch (error) {
-        console.log(error);
+        console.log(error.message);
     }
     process.exit(0);
 }
@@ -168,14 +215,14 @@ function repl() {
             pid = restartNodeProject(pid, dirDist);
             pid !== -1 && console.log(`项目 ${project} 已重启, root PID: ${pid}`);
         }
-    })
+    });
     // rl.on('SIGINT', () => { // ^C 中断
     rl.on('close', () => { // ^C and ^D 中断
         try {
-            console.log(`关闭 ${project} ...`);
-            if (process.platform.match(/win/)) { // win32
+            console.info(`关闭 ${project} ...`);
+            if (process.platform.match(/win/i)) { // win32
                 // pid属于cmd进程, 因此需要针对平台杀进程树
-                child_process.execSync(`taskkill /F /PID ${pid} /T 2>nul`); // "/T"参数非常关键, 配合"start /WAIT"命令
+                pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T 2>nul`); // "/T"参数非常关键, 配合"start /WAIT"命令
             } else {
                 process.kill(pid, 'SIGINT');
             }
@@ -183,27 +230,14 @@ function repl() {
             console.error(error.message);
         }
         // 无论如何, 关闭自身
-        console.log('关闭 node-dev-server ...');
+        console.info('关闭 node-dev-server ...');
         process.exit(0);
     });
 }
 
-function consoleHook() {
-    const _log = console.log;
-    const _err = console.error;
-    console.log = (...params) => {
-        _log('[I]'.green, ...params);
-    };
-    console.error = (...params) => {
-        _err('[E]'.red, ...params);
-    };
-    if (process.platform.match(/win/)) { // win32
-        child_process.execSync('chcp 65001'); // 解决Windows下输出乱码问题
-    }
-}
-
 function forceExit(msg) {
     console.error(msg);
+    console.info('发生了错误，node-dev-server 结束运行!');
     process.exit(-1);
     throw msg;
 }
