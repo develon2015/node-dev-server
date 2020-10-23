@@ -56,7 +56,11 @@ function callWebpack(argv) {
     // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
     // state包含编译时间、编译hash等信息。
     let compiler = webpack(config, (error, state) => {
-        if (!error && state.compilation.errors.length === 0) {
+        if (error) { // Webpack配置出错, 强制结束node-dev-server
+            console.error(error.message);
+            forceExit('配置出错, Webpack拒绝编译');
+        }
+        if (state.compilation.errors.length === 0) {
             console.log('编译完成'.green);
             pid = restartNodeProject(pid, dirDist);
             pid !== -1 && console.log(`项目 ${project} 已启动, root PID：${pid}`.green);
@@ -165,15 +169,22 @@ function repl() {
             pid !== -1 && console.log(`项目 ${project} 已重启, root PID: ${pid}`);
         }
     })
-    // rl.on('SIGINT', () => {
-    rl.on('close', () => {
-        console.log('关闭 node-dev-server ...');
-        if (process.platform.match(/win/)) { // win32
+    // rl.on('SIGINT', () => { // ^C 中断
+    rl.on('close', () => { // ^C and ^D 中断
+        try {
             console.log(`关闭 ${project} ...`);
-            child_process.execSync(`taskkill /F /PID ${process.ppid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
+            if (process.platform.match(/win/)) { // win32
+                // pid属于cmd进程, 因此需要针对平台杀进程树
+                child_process.execSync(`taskkill /F /PID ${pid} /T 2>nul`); // "/T"参数非常关键, 配合"start /WAIT"命令
+            } else {
+                process.kill(pid, 'SIGINT');
+            }
+        } catch (error) {
+            console.error(error.message);
         }
-        process.kill(process.ppid, 'SIGINT');
-        process.kill(process.pid, 'SIGINT');
+        // 无论如何, 关闭自身
+        console.log('关闭 node-dev-server ...');
+        process.exit(0);
     });
 }
 
@@ -189,4 +200,10 @@ function consoleHook() {
     if (process.platform.match(/win/)) { // win32
         child_process.execSync('chcp 65001'); // 解决Windows下输出乱码问题
     }
+}
+
+function forceExit(msg) {
+    console.error(msg);
+    process.exit(-1);
+    throw msg;
 }
