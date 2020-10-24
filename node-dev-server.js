@@ -89,7 +89,7 @@ function callWebpack(argv) {
         mergedConfig.output = {
             // 由于dirDist根据config.output.path决定, 此处显式声明Webpack缺省值,
             // 因为就算用户在webpack.config.js中定义了output, 也不一定有path字段
-            path: path.resolve(projectName, 'dist'), 
+            path: path.resolve(project, 'dist'), 
             ...mergedConfig.output,
         };
         mergedConfig.externals = [
