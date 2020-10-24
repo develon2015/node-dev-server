@@ -18,7 +18,12 @@ function stringify(obj) {
         }
     }
     try {
-        return JSON.stringify(obj, undefined, 2);
+        return JSON.stringify(obj, (key, value) => {
+            if (value && value.constructor === Function) {
+                return `[Function: ${value.name}]`;
+            }
+            return value;
+        }, 2);
     } catch (error) {
         return obj.toString();
     }

@@ -77,16 +77,12 @@ function callWebpack(argv) {
     if (config.constructor === Promise) { // 检测导出的config是否是一个Promise对象
         awaitConfig = config;
     }
-    awaitConfig.then((resolvedConfig) => {
-        // 如果config不是Promise或返回Promise对象的函数, 则resolevdConfig不变，仍是config
-        // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
-        // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
-        // state包含编译时间、编译hash等信息。
+    awaitConfig.then((resolvedConfig) => { // 如果config不是Promise或返回Promise对象的函数, 则resolevdConfig不变，仍是config
         let configFromNDS = {
             mode: 'none', // Webpack缺省模式是'production', 编译非常慢
             target: 'node',
-            externals: excludeNodeModules,
             watch, // 当然是持续监测依赖模块, 即时编译了. 有意思的是package.json文件也会引发编译
+            externals: [], // 避免mergedConfig.externals为null
         };
         let mergedConfig = { ...configFromNDS, ...resolvedConfig };
         // 优化output字段
@@ -96,12 +92,20 @@ function callWebpack(argv) {
             path: path.resolve(projectName, 'dist'), 
             ...mergedConfig.output,
         };
+        mergedConfig.externals = [
+            excludeNodeModules,
+            ...([mergedConfig.externals]/*mergedConfig.externals可能是数组,也可能是函数等,构造数组再展平*/.flat()), // 最后解构一维数组
+        ];
+        // _log('最终Webpack配置:', mergedConfig);
         console.info('最终Webpack配置:', mergedConfig);
         if (mergedConfig.target !== 'node') {
             console.warn('您编译的目标平台似乎不是Node?', '您在webpack.config.js中声明的目标平台是:', mergedConfig.target);
         }
         dirDist = mergedConfig.output.path;
         console.info('输出目录:', dirDist);
+        // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
+        // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
+        // state包含编译时间、编译hash等信息。
         // 如果传给webpack() API的第一个参数是数组，则error为ValidationError时至少有一个配置对象不合法
         // 同时state同样是对应的数组: MultiStatsMultiStats { stats: [ Stats { compilation: [Compilation] }, Stats { compilation: [Compilation] } ] }
         let compiler = webpack(mergedConfig, (error, state) => {
@@ -178,7 +182,7 @@ function restartNodeProject_win(pid, dirDist) {
                 break;
             }
         }
-        if (!finded) throw new Error(`输出目录下没有发现以下任何一个可执行文件：${files.join('.js ')}`);
+        if (!finded) throw new Error(`输出目录下没有发现以下任何一个可执行文件：${files.join('.js ')}.js`);
         // 使用start命令启动一个单独的窗口运行指定的程序或命令, "taskkill /F /T /PID <pid>"可杀死cmd窗口下的子进程树
         // "/WAIT"参数非常关键, 如果启动应用程序后不等待它终止就退出运行start命令的cmd.exe进程, 那么无法通过该root进程的pid追踪进程树
         const newCmd = `start "${projectName}" /WAIT cmd /c "${cmd} & pause"`;
