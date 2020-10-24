@@ -27,7 +27,8 @@
   "keywords": [
     "node.js",
     "server-development",
-    "webpack-dev-server"
+    "real-time-reload",
+    "just like webpack-dev-server"
   ],
   "license": "MIT"
 }

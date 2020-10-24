@@ -1,4 +1,4 @@
-let colors = require('colors');
+require('colors');
 const child_process = require('child_process');
 const _log = console.log;
 const _info = console.info;
@@ -12,6 +12,9 @@ function stringify(obj) {
         }
         case Function: {
             return `Function: Function.name`;
+        }
+        case Error: {
+            return obj.stack;
         }
     }
     try {
@@ -35,7 +38,7 @@ function consoleHook() {
         _warn('[W]'[color], ...(params.map(it => stringify(it)[color])));
     };
     console.error = (...params) => {
-        let color = 'red';
+        let color = 'brightRed';
         _error('[E]'[color], ...(params.map(it => stringify(it)[color])));
     };
     if (process.platform.match(/win/)) { // win32

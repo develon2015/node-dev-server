@@ -48,11 +48,7 @@ let watch = true;
  * @param {string[]} argv Node进程命令行参数
  */
 function callWebpack(argv) {
-    if (argv.length < 1) {
-        project = process.cwd();
-    } else {
-        project = path.resolve(process.cwd(), argv[0]);
-    }
+    project = path.resolve(process.cwd(), argv.length < 1 ? '.' : argv[0]);
     console.info('项目根目录:', project);
     if (!fs.existsSync(project)) throw new Error('工程不存在！');
     // 解析项目根目录的package.json项目描述文件和webpack配置文件
@@ -87,15 +83,25 @@ function callWebpack(argv) {
         // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
         // state包含编译时间、编译hash等信息。
         let configFromNDS = {
+            mode: 'none', // Webpack缺省模式是'production', 编译非常慢
+            target: 'node',
             externals: excludeNodeModules,
-            watch,
+            watch, // 当然是持续监测依赖模块, 即时编译了. 有意思的是package.json文件也会引发编译
         };
         let mergedConfig = { ...configFromNDS, ...resolvedConfig };
+        // 优化output字段
         mergedConfig.output = {
-            path: path.resolve(projectName, 'dist'),
+            // 由于dirDist根据config.output.path决定, 此处显式声明Webpack缺省值,
+            // 因为就算用户在webpack.config.js中定义了output, 也不一定有path字段
+            path: path.resolve(projectName, 'dist'), 
+            ...mergedConfig.output,
         };
         console.info('最终Webpack配置:', mergedConfig);
+        if (mergedConfig.target !== 'node') {
+            console.warn('您编译的目标平台似乎不是Node?', '您在webpack.config.js中声明的目标平台是:', mergedConfig.target);
+        }
         dirDist = mergedConfig.output.path;
+        console.info('输出目录:', dirDist);
         // 如果传给webpack() API的第一个参数是数组，则error为ValidationError时至少有一个配置对象不合法
         // 同时state同样是对应的数组: MultiStatsMultiStats { stats: [ Stats { compilation: [Compilation] }, Stats { compilation: [Compilation] } ] }
         let compiler = webpack(mergedConfig, (error, state) => {
@@ -110,8 +116,9 @@ function callWebpack(argv) {
             } else {
                 console.error('编译失败！');
                 state.compilation.errors.forEach(it => {
-                    console.error(it.message);
-                    _log(it); // 使用原生输出函数显示具体编译错误
+                    // console.error(it.message);
+                    // _log(it); // 使用原生输出函数显示具体编译错误
+                    console.error(`${it.name}:`, it.details); // 打印Webpack编译异常
                 });
             }
             console.log(`耗时：${(state.compilation.endTime - state.compilation.startTime)} ms`);
@@ -171,7 +178,7 @@ function restartNodeProject_win(pid, dirDist) {
                 break;
             }
         }
-        if (!finded) throw new Error(`没有发现以下入口文件：${files.join('.js ')}`);
+        if (!finded) throw new Error(`输出目录下没有发现以下任何一个可执行文件：${files.join('.js ')}`);
         // 使用start命令启动一个单独的窗口运行指定的程序或命令, "taskkill /F /T /PID <pid>"可杀死cmd窗口下的子进程树
         // "/WAIT"参数非常关键, 如果启动应用程序后不等待它终止就退出运行start命令的cmd.exe进程, 那么无法通过该root进程的pid追踪进程树
         const newCmd = `start "${projectName}" /WAIT cmd /c "${cmd} & pause"`;
