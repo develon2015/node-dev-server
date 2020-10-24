@@ -11,7 +11,7 @@ function stringify(obj) {
             return obj;
         }
         case Function: {
-            return `Function: Function.name`;
+            return `[Function: ${obj.name || 'anonymous'}]`;
         }
         case Error: {
             return obj.stack;
@@ -20,7 +20,10 @@ function stringify(obj) {
     try {
         return JSON.stringify(obj, (key, value) => {
             if (value && value.constructor === Function) {
-                return `[Function: ${value.name}]`;
+                return `[Function: ${value.name || 'anonymous'}]`;
+            }
+            if (value && value.constructor === RegExp) {
+                return value.toString();
             }
             return value;
         }, 2);

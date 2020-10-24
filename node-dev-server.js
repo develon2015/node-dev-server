@@ -25,6 +25,8 @@ let projectName = 'Node Project';
 const path_to_node = process.argv0 || 'node';
 /**
  * 是否清理dist目录
+ * 目前该参数只是作为"--env rebuild=false"的形式传入webpack.confg.js模块导出函数
+ * 该导出函数只在初始化时被调用一次
  */
 let rebuild = false;
 /**
@@ -61,7 +63,13 @@ function callWebpack(argv) {
         packageJSON = require(pathPackageJSONFile);
         projectName = packageJSON.name || project;
     }
-    let config = {}; // 缺省config对象
+    let config = { // 缺省config对象
+        entry: path.resolve(project, 'src/index.js'),
+        output: {
+            filename: 'main.js',
+            path: path.resolve(project, 'dist'),
+        },
+    };
     if (!fs.existsSync(pathWebpackConfigFile)) { // 没有定义webpack.config.js文件
         // throw new Error('没有发现配置文件：webpack.config.js');
         // 没有必要抛异常，因为Webpack5开箱即用
@@ -71,7 +79,7 @@ function callWebpack(argv) {
     }
     // 如果项目的webpack配置文件导出的是一个函数, 则立即调用该函数, 可能直接返回webpack.config, 也可能返回一个Promise对象
     if (typeof config === 'function') {
-        config = config({ rebuild, watch, project, }, { color: true, entry: [/*此处并不会影响config*/] });
+        config = config({ rebuild }, { color: true, entry: [/*此处并不会影响config*/] });
     }
     let awaitConfig = Promise.resolve(config); // 构造缺省Promise，设置resolevdConfig缺省值为config
     if (config.constructor === Promise) { // 检测导出的config是否是一个Promise对象
@@ -81,10 +89,10 @@ function callWebpack(argv) {
         let configFromNDS = {
             mode: 'none', // Webpack缺省模式是'production', 编译非常慢
             target: 'node',
-            watch, // 当然是持续监测依赖模块, 即时编译了. 有意思的是package.json文件也会引发编译
-            externals: [], // 避免mergedConfig.externals为null
+            externals: [], // 避免mergedConfig.externals为undefined
         };
-        let mergedConfig = { ...configFromNDS, ...resolvedConfig };
+        // 当然是持续监测依赖模块, 即时编译了. 有意思的是package.json文件也会引发编译
+        let mergedConfig = { ...configFromNDS, ...resolvedConfig, watch };
         // 优化output字段
         mergedConfig.output = {
             // 由于dirDist根据config.output.path决定, 此处显式声明Webpack缺省值,
@@ -122,7 +130,7 @@ function callWebpack(argv) {
                 state.compilation.errors.forEach(it => {
                     // console.error(it.message);
                     // _log(it); // 使用原生输出函数显示具体编译错误
-                    console.error(`${it.name}:`, it.details); // 打印Webpack编译异常
+                    printWebpackCompileError(it); // 打印各种Webpack编译异常
                 });
             }
             console.log(`耗时：${(state.compilation.endTime - state.compilation.startTime)} ms`);
@@ -251,4 +259,27 @@ function forceExit(msg) {
     console.info('发生了错误，node-dev-server 结束运行!');
     process.exit(-1);
     throw msg;
+}
+
+/**
+ * 标红不同Webpack编译错误的详细情报
+ * @param {Error} error 
+ */
+function printWebpackCompileError(error) {
+    // console.info(error.name);
+    switch (error.name) {
+        case 'ModuleNotFoundError': {
+            // console.error(`${error.name}:`, error.details);
+            console.error(error.stack);
+            break;
+        }
+        case 'ModuleParseError': {
+            console.error(error.stack);
+            break;
+        }
+        default: {
+            // _error(error);
+            console.error(error.stack);
+        }
+    }
 }
