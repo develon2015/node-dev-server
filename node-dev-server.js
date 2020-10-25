@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const { consoleHook, _log, } = require('./console-hook');
 consoleHook();
-const { excludeNodeModules, } = require('./webpack-externals');
 
 /**
  * 项目根目录
@@ -21,6 +20,7 @@ let packageJSON = {};
 let projectName = 'Node Project';
 /**
  * Node引擎的绝对路径, 通过process.argv0获取
+ * argv0和argv[0]是有区别的
  */
 const path_to_node = process.argv0 || 'node';
 /**
@@ -100,6 +100,8 @@ function callWebpack(argv) {
             path: path.resolve(project, 'dist'), 
             ...mergedConfig.output,
         };
+        // 获取excludeNodeModules函数
+        const excludeNodeModules = require('./webpack-externals')(project);
         mergedConfig.externals = [
             excludeNodeModules,
             ...([mergedConfig.externals]/*mergedConfig.externals可能是数组,也可能是函数等,构造数组再展平*/.flat()), // 最后解构一维数组
