@@ -1,4 +1,21 @@
-# node-dev-server
+<div align="center">
+  <a href="https://webpack.js.org" target="_blank"><img src="https://webpack.js.org/1fcab817090e78435061.svg" width="200" alt="Webpack Logo" /></a>
+  <h1>node-dev-server</h1>
+  <div>Serves a Node.js app. Restart the app on changes.</div>
+  <div>
+    <a href="https://www.npmjs.com/package/@develon/node-dev-server">
+      <img alt="npm" src="https://img.shields.io/npm/v/@develon/node-dev-server?logoColor=brightgreen"/>
+    </a>
+    <a href="https://www.npmjs.com/package/@develon/node-dev-server">
+      <img alt="npm" src="https://img.shields.io/npm/l/@develon/node-dev-server">
+    </a>
+    <a href="https://www.npmjs.com/package/@develon/node-dev-server">
+      <img alt="npm" src="https://img.shields.io/npm/dw/@develon/node-dev-server">
+    </a>
+  </div>
+</div>
+
+## Description
 
 Serves a Node.js app. Restart the app on changes. Just like the webpack-dev-server but this is not web.
 
@@ -93,4 +110,3 @@ Then you can see this output, and a new cmd.exe window running the project "uexp
 const webpack: (options: Configuration, callback?: CallbackWebpack<Stats>) => Compiler
 const webpack: (options: Configuration[], callback?: CallbackWebpack<Stats>) => Compiler
 ```
-![webpack](https://webpack.js.org/1fcab817090e78435061.svg)
