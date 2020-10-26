@@ -25,7 +25,7 @@ $ npm install --global @develon/node-dev-server
 
 ## Usage
 
-Start watch a project:
+Start watching a project:
 ```
 $ nds [project]
 ```
