@@ -54,7 +54,7 @@ function callWebpack(argv) {
     console.info('项目根目录:', project);
     if (!fs.existsSync(project)) throw new Error('工程不存在！');
     // 解析项目根目录的package.json项目描述文件和webpack配置文件
-    const pathWebpackConfigFile = path.resolve(project, 'webpack.config.js');
+    let pathWebpackConfigFile = path.resolve(project, 'webpack.config'); // 后缀待定，可以是js、cjs、mjs（需要使用import函数），甚至是json（不推荐）
     const pathPackageJSONFile = path.resolve(project, 'package.json');
     if (!fs.existsSync(pathPackageJSONFile)) { // 没有定义package.json文件，不是一个标准的Node.js项目
         console.warn('没有定义 package.json 文件，请初始化 Node.js 项目');
@@ -63,19 +63,19 @@ function callWebpack(argv) {
         packageJSON = require(pathPackageJSONFile);
         projectName = packageJSON.name || project;
     }
-    let config = { // 缺省config对象
-        entry: path.resolve(project, 'src/index.js'),
-        output: {
-            filename: 'main.js',
-            path: path.resolve(project, 'dist'),
-        },
-    };
-    if (!fs.existsSync(pathWebpackConfigFile)) { // 没有定义webpack.config.js文件
+    let config = {};
+    if (['js', /*'cjs', 'mjs'*/].some(ext => {
+        let fullname = `${pathWebpackConfigFile}.${ext}`;
+        if (fs.existsSync(fullname)) {
+            pathWebpackConfigFile = fullname;
+            return true;
+        }
+    })) { // 导入webpack.config.[c]js模块
+        config = require(pathWebpackConfigFile); // webpack.config.[cm]js文件导出的类型有：对象、Promise、函数
+    } else {
         // throw new Error('没有发现配置文件：webpack.config.js');
         // 没有必要抛异常，因为Webpack5开箱即用
         console.warn('没有定义 webpack.config.js 文件，默认入口：src/index.js，默认输出：dist/main.js');
-    } else {
-        config = require(pathWebpackConfigFile); // webpack.config.js文件导出的类型有：对象、Promise、函数
     }
     // 如果项目的webpack配置文件导出的是一个函数, 则立即调用该函数, 可能直接返回webpack.config, 也可能返回一个Promise对象
     if (typeof config === 'function') {
@@ -90,6 +90,7 @@ function callWebpack(argv) {
             mode: 'none', // Webpack缺省模式是'production', 编译非常慢
             target: 'node',
             externals: [], // 避免mergedConfig.externals为undefined
+            entry: path.resolve(project, 'src/index.js'),
         };
         // 当然是持续监测依赖模块, 即时编译了. 有意思的是package.json文件也会引发编译
         let mergedConfig = { ...configFromNDS, ...resolvedConfig, watch };
@@ -97,11 +98,14 @@ function callWebpack(argv) {
         mergedConfig.output = {
             // 由于dirDist根据config.output.path决定, 此处显式声明Webpack缺省值,
             // 因为就算用户在webpack.config.js中定义了output, 也不一定有path字段
+            filename: 'main.js',
             path: path.resolve(project, 'dist'), 
             ...mergedConfig.output,
         };
+        dirDist = mergedConfig.output.path; // 产物输出目录dirDist确定
         // 获取excludeNodeModules函数
-        const excludeNodeModules = require('./webpack-externals')(project);
+        const excludeNodeModules = require('./webpack-externals')(project, dirDist);
+        // 合并externals数组
         mergedConfig.externals = [
             excludeNodeModules,
             ...([mergedConfig.externals]/*mergedConfig.externals可能是数组,也可能是函数等,构造数组再展平*/.flat()), // 最后解构一维数组
@@ -111,7 +115,6 @@ function callWebpack(argv) {
         if (mergedConfig.target !== 'node') {
             console.warn('您编译的目标平台似乎不是Node?', '您在webpack.config.js中声明的目标平台是:', mergedConfig.target);
         }
-        dirDist = mergedConfig.output.path;
         console.info('输出目录:', dirDist);
         // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
         // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
