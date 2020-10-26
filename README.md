@@ -1,13 +1,19 @@
 # node-dev-server
 
-Node.js后端开发自动重启以apply更新, 对标前端开发工具webpack-dev-server.
-后人有诗云：
-> node-dev-server之于后端，webpack-dev-server之于前端
+Serves a Node.js app. Restart the app on changes. Just like the webpack-dev-server but this is not web.
+
+Why not use the [nodemon](https://github.com/remy/nodemon)?
+
+1. We use webpack5, not simply watch the OS File-System events;
+
+2. We can kill already exists process, compile and restart a cmd.exe window on source-code changes.
+
+(Only implemented on the Windows OS currently)
 
 
 ## Install
 
-Install the global command "node-dev-server" or "nds":
+This is a CLI program, install the global command "node-dev-server" or "nds" by:
 ```
 $ yarn global add @develon/node-dev-server
 ```
@@ -19,13 +25,16 @@ $ npm install --global @develon/node-dev-server
 
 ## Usage
 
+Start watch a project:
+```
+$ nds [project]
+```
+
 For example, watch and compile the project "uexpress":
 ```
-$ nds uexpress
-```
-or
-```
-$ cd uexpress && node-dev-server
+node-dev-server $ cd uexpress
+uexpress $ yarn install       #Installation dependencies
+uexpress $ nds .              #Start watching
 ```
 
 Then you can see this output, and a new cmd.exe window running the project "uexpress":
@@ -77,9 +86,9 @@ Then you can see this output, and a new cmd.exe window running the project "uexp
 ```
 
 
-### 原理
+### About
 
-读取并处理webpack.config.js文件, 使用Webpack提供的API函数 -- `webpack()` 编译并处理编译状态。
+该程序通过读取并处理webpack.config.js文件, 使用Webpack提供的API函数 -- `webpack()` 编译并处理编译状态。
 ```
 const webpack: (options: Configuration, callback?: CallbackWebpack<Stats>) => Compiler
 const webpack: (options: Configuration[], callback?: CallbackWebpack<Stats>) => Compiler
