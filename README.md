@@ -4,13 +4,19 @@
   <div>Serves a Node.js app. Restart the app on changes.</div>
   <div>
     <a href="https://www.npmjs.com/package/@develon/node-dev-server">
-      <img alt="npm" src="https://img.shields.io/npm/v/@develon/node-dev-server?logoColor=brightgreen"/>
+      <img alt="version" src="https://img.shields.io/npm/v/@develon/node-dev-server?logoColor=brightgreen"/>
     </a>
     <a href="https://www.npmjs.com/package/@develon/node-dev-server">
-      <img alt="npm" src="https://img.shields.io/npm/l/@develon/node-dev-server">
+      <img alt="license" src="https://img.shields.io/npm/l/@develon/node-dev-server">
     </a>
     <a href="https://www.npmjs.com/package/@develon/node-dev-server">
-      <img alt="npm" src="https://img.shields.io/npm/dw/@develon/node-dev-server">
+      <img alt="downloads" src="https://img.shields.io/npm/dw/@develon/node-dev-server">
+    </a>
+    <a href="https://www.npmjs.com/package/@develon/node-dev-server">
+      <img alt="webpack" src="https://img.shields.io/github/package-json/dependency-version/develon2015/node-dev-server/webpack?color=green">
+    </a>
+    <a href="https://www.npmjs.com/package/@develon/node-dev-server">
+      <img alt="webpack-cli" src="https://img.shields.io/github/package-json/dependency-version/develon2015/node-dev-server/webpack-cli?color=green">
     </a>
   </div>
 </div>
