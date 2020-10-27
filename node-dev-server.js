@@ -248,7 +248,7 @@ function repl() {
                 // pid属于cmd进程, 因此需要针对平台杀进程树
                 pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T 2>nul`); // "/T"参数非常关键, 配合"start /WAIT"命令
             } else {
-                process.kill(pid, 'SIGINT');
+                pid !== -1 && process.kill(pid, 'SIGINT');
             }
         } catch (error) {
             console.error(error.message);
