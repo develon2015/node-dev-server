@@ -3,6 +3,8 @@ const path = require('path');
 let _projectRootDir = undefined;
 /** 项目的产物目录 */
 let _projectDistDir = undefined;
+/** webpack.config.output.libaryTarget字段，umd和commonjs[2]和var的处理方式不同 */
+let _libraryTarget = undefined;
 
 /**
  * 该函数混入webpack.config.externals字段中, 可减轻开发时的编译量
@@ -26,6 +28,10 @@ function excludeNodeModules({ context, request }, callback) { // 官网和CLI提
                 // 替换node_modules依赖请求
                 let instruction = `require('${request}')`;
                 console.log('运行时模块:', `${request}由node_modules提供 => ${request} = ${instruction}`);
+                if (_libraryTarget === 'umd' || _libraryTarget === 'commonjs' || _libraryTarget === 'commonjs2') {
+                    console.info('UMD 或 CommonJS 模式');
+                    return void callback(/*没有错误*/null, request);
+                }
                 return void callback(/*没有错误*/null, instruction);
             } else {
                 console.log(`导入loader模块：${request}`);
@@ -47,10 +53,13 @@ function excludeNodeModules({ context, request }, callback) { // 官网和CLI提
 
 /**
  * 初始化projectRootDir, 从而获取excludeNodeModules函数的引用
- * @param {*} projectRootDir
+ * @param {string} projectRootDir 项目的根目录
+ * @param {string} projectDistDir 项目的产物目录
+ * @param {string} libaryTarget webpack.config.output.libaryTarget字段，umd和commonjs[2]和var的处理方式不同
  */
-module.exports = function (projectRootDir, projectDistDir) {
+module.exports = function (projectRootDir, projectDistDir, libraryTarget) {
     _projectRootDir = projectRootDir;
     _projectDistDir = projectDistDir;
+    _libraryTarget = libraryTarget;
     return excludeNodeModules;
 };
