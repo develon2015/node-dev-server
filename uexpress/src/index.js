@@ -1,11 +1,11 @@
 import express from 'express';
-require('colors');
+import 'colors';
+// import beforeHandleRequest from './router/beforeHandleRequest';
+import beforeHandleRequest from '@/router/beforeHandleRequest';
 
 function init() {
     const app = express();
-    app.use((req, res, next) => {
-        next();
-    });
+    app.use(beforeHandleRequest);
     app.use((req, res, next) => {
         res.send({ code: 404 });
     });
@@ -16,4 +16,4 @@ function init() {
 
 void function main() {
     init();
-}()
+}();

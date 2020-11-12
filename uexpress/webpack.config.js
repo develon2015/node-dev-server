@@ -22,6 +22,11 @@ function getWebpackConfigByName(projectName) {
                 { test: /\.ts$/, use: ['babel-loader', 'ts-loader'] },
             ],
         },
+        resolve: {
+            alias: {
+                '@': DIR_SRC,
+            },
+        },
     };
     return { config, DIR_DIST, };
 }

@@ -5,6 +5,8 @@ let _projectRootDir = undefined;
 let _projectDistDir = undefined;
 /** webpack.config.output.libaryTarget字段，umd和commonjs[2]和var的处理方式不同 */
 let _libraryTarget = undefined;
+/** 用户可能指定了解析别名, 比如@指向DIR_SRC */
+let _resolve = undefined;
 
 /**
  * 该函数混入webpack.config.externals字段中, 可减轻开发时的编译量
@@ -25,12 +27,24 @@ function excludeNodeModules({ context, request }, callback) { // 官网和CLI提
             // 一般来说，即便这些依赖项可以在运行时加载，不过我们也希望进行编译打包，从而方便开发，比如说ts-loader
             // 如果指定了loader，则一定含有感叹号！这种情况需要排除掉
             if (!request.includes('!')) { // 放行loader模块
+                if (_resolve && _resolve.alias) { // 处理"解析别名"
+                    for (let key in _resolve.alias) {
+                        let value = _resolve.alias[key];
+                        if (key.match(/\$$/) && request + '$' === key) {
+                            request = value;
+                            return excludeNodeModules({ context, request }, callback); // 使用递归, 导致具有重复替换的性质
+                        } else if (request.startsWith(key)) {
+                            request = request.replace(key, value);
+                            return excludeNodeModules({ context, request }, callback);
+                        }
+                    }
+                }
                 // 替换node_modules依赖请求
                 let instruction = `require('${request}')`;
                 console.log('运行时模块:', `${request}由node_modules提供 => ${request} = ${instruction}`);
                 if (_libraryTarget === 'umd' || _libraryTarget === 'commonjs' || _libraryTarget === 'commonjs2') {
                     console.info('UMD 或 CommonJS 模式');
-                    return void callback(/*没有错误*/null, request);
+                    return void callback(/*没有错误*/null, request); // 直接返回模块名, 而无需通过callback返回字符串`require(${request})`
                 }
                 return void callback(/*没有错误*/null, instruction);
             } else {
@@ -57,9 +71,10 @@ function excludeNodeModules({ context, request }, callback) { // 官网和CLI提
  * @param {string} projectDistDir 项目的产物目录
  * @param {string} libaryTarget webpack.config.output.libaryTarget字段，umd和commonjs[2]和var的处理方式不同
  */
-module.exports = function (projectRootDir, projectDistDir, libraryTarget) {
+module.exports = function (projectRootDir, projectDistDir, libraryTarget, resolve) {
     _projectRootDir = projectRootDir;
     _projectDistDir = projectDistDir;
     _libraryTarget = libraryTarget;
+    _resolve = resolve;
     return excludeNodeModules;
 };

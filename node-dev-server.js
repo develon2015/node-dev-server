@@ -104,7 +104,7 @@ function callWebpack(argv) {
         };
         dirDist = mergedConfig.output.path; // 产物输出目录dirDist确定
         // 获取excludeNodeModules函数
-        const excludeNodeModules = require('./webpack-externals')(project, dirDist, mergedConfig.output.libraryTarget);
+        const excludeNodeModules = require('./webpack-externals')(project, dirDist, mergedConfig.output.libraryTarget, mergedConfig.resolve);
         // 合并externals数组
         mergedConfig.externals = [
             excludeNodeModules,
