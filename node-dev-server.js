@@ -2,8 +2,6 @@ const webpack = require('webpack');
 const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { consoleHook, _log, } = require('./console-hook');
-consoleHook();
 
 /**
  * 项目根目录
@@ -75,7 +73,7 @@ function callWebpack(argv) {
     } else {
         // throw new Error('没有发现配置文件：webpack.config.js');
         // 没有必要抛异常，因为Webpack5开箱即用
-        console.warn('没有定义 webpack.config.js 文件，默认入口：src/index.js，默认输出：dist/main.js');
+        console.warn('没有定义 webpack.config.js 文件，默认入口：src/index，默认输出：dist/main.js');
     }
     // 如果项目的webpack配置文件导出的是一个函数, 则立即调用该函数, 可能直接返回webpack.config, 也可能返回一个Promise对象
     if (typeof config === 'function') {
@@ -90,7 +88,7 @@ function callWebpack(argv) {
             mode: 'none', // Webpack缺省模式是'production', 编译非常慢
             target: 'node',
             externals: [], // 避免mergedConfig.externals为undefined
-            entry: path.resolve(project, 'src/index.js'),
+            entry: path.resolve(project, 'src/index'),
         };
         // 当然是持续监测依赖模块, 即时编译了. 有意思的是package.json文件也会引发编译
         let mergedConfig = { ...configFromNDS, ...resolvedConfig, watch };
@@ -150,8 +148,12 @@ function callWebpack(argv) {
     });
 }
 
-/** 主函数，立即执行 */
-void function main() {
+/**
+ * nds主函数，仅当使用以下命令时启动nds：
+ * 
+ * $ nds [dir_project]
+ */
+function nds() {
     process.title = 'node-dev-server';
     process.once('SIGINT', onSIGINT); // 监听^C事件
     try {
@@ -160,7 +162,7 @@ void function main() {
     } catch (error) {
         console.error(error.message);
     }
-}()
+}
 
 /** 重启项目Node进程 */
 function restartNodeProject(pid, dirDist) {
@@ -288,3 +290,5 @@ function printWebpackCompileError(error) {
         }
     }
 }
+
+module.exports = nds;
