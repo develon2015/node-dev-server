@@ -127,6 +127,11 @@ app $ touch src/index.ts   #project entry
 app $ nds .                #compile and watch
 ```
 
+当然，别忘了添加types：
+```
+yarn add -D @types/node
+```
+
 
 ### Electron-main支持
 
