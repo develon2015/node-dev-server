@@ -109,6 +109,30 @@ Then you can see this output, and a new cmd.exe window running the project "uexp
 ```
 
 
+### 开箱即用的TypeScript支持
+
+首先，为了确保`babel-loader`及其插件(`plugins`)和预设(`presets`)都在nds的`node_modules`目录下，我们需要通过源码安装nds：
+```
+~ $ git clone https://github.com/develon2015/node-dev-server
+~ $ cd node-dev-server
+node-dev-server $ yarn install
+node-dev-server $ yarn link
+```
+
+然后，可以创建TypeScript项目了：
+```
+app $ yarn init -y         #initialize a Node.js project
+app $ nds --eject          #eject TypeScript config
+app $ touch src/index.ts   #project entry
+app $ nds .                #compile and watch
+```
+
+
+### Electron-main支持
+
+待定。
+
+
 ### About
 
 该程序通过读取并处理webpack.config.js文件, 使用Webpack提供的API函数 -- `webpack()` 编译并处理编译状态。
