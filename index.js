@@ -62,6 +62,13 @@ function main() {
             help();
             break;
         }
+        case '-v':
+        case '-V':
+        case 'version':
+        case '--version': {
+            version();
+            break;
+        }
         default: {
             consoleHook();
             nds();
@@ -81,9 +88,15 @@ Usage: nds [options] [project]
            -c, --create         Create a TypeScript project and init it
            -i, --init           Init a TypeScript project
            -ej, --eject         Eject the TypeScript supported configuration file
+           -v, --version        Display version of node-dev-server
            -h, --help           Display help for command`;
     _log(info);
     process.exit(0);
+}
+
+function version() {
+    const PACKAGE_JSON = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json')));
+    console.log(PACKAGE_JSON.version);
 }
 
 main();
