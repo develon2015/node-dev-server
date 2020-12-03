@@ -11,10 +11,12 @@ const DIR_SRC = path.resolve(DIR_PROJECT, 'src');
 const DIR_DIST = path.resolve(DIR_PROJECT, 'dist');
 
 const CONFIG = {
-    // target: 'electron-renderer', // 避免打包'electron'
-    target: 'node',
-    mode: 'development',
-    // devtool: 'source-map',
+    target: 'node', // 请本地安装开发依赖: @types/node
+    // target: 'electron-main', // electron主进程支持. 需要全局安装electron, 然后link到本地. 必要时可在本地安装@electron/typescript-definitions以提供类型支持
+    // target: 'electron-renderer', // electron渲染进程不需要使用nds, 请使用: webpack-dev-server + webpack serve
+    mode: 'none', // 开发时不建议使用默认值"production"
+    // mode: 'development', // 开发模式
+    // devtool: 'source-map', // 生成main.js.map源码映射文件, 以支持.ts源码的断点调试。还可以使用inline-source-map
     entry: {
         main: path.resolve(DIR_SRC),
     },

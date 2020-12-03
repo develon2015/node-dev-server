@@ -40,6 +40,10 @@ let dirDist = process.cwd;
  * 是否监测
  */
 let watch = true;
+/**
+ * 最终的webpack配置
+ */
+let finalConfig = {};
 
 /**
  * 调用webpack API, 构建自己的CLI工具
@@ -110,9 +114,11 @@ function callWebpack(argv) {
         ];
         // _log('最终Webpack配置:', mergedConfig);
         console.info('最终Webpack配置:', mergedConfig);
-        if (mergedConfig.target !== 'node') {
-            console.warn('您编译的目标平台似乎不是Node?', '您在webpack.config.js中声明的目标平台是:', mergedConfig.target);
+        finalConfig = mergedConfig;
+        if (mergedConfig.target !== 'node' && mergedConfig.target !== 'electron-main') {
+            console.warn('您编译的目标平台似乎不是node, 也不是electron-main?', '您在webpack.config.js中声明的目标平台是:', mergedConfig.target);
         }
+        console.info('目标平台:', mergedConfig.target);
         console.info('输出目录:', dirDist);
         // webpack()函数返回一个Compiler对象，可提供一个回调函数，接受每次编译的error和state。
         // 其中error为null时并不一定代表编译成功。还得state.compilation.errors为empty才行。
@@ -126,7 +132,7 @@ function callWebpack(argv) {
             }
             if (state.compilation.errors.length === 0) {
                 console.info('编译完成！');
-                pid = restartNodeProject(pid, dirDist);
+                pid = restartNodeProject(pid, dirDist, mergedConfig.target);
                 pid !== -1 && console.info(`项目 ${projectName} 已启动, root PID：${pid}`);
             } else {
                 console.error('编译失败！');
@@ -165,16 +171,16 @@ function nds() {
 }
 
 /** 重启项目Node进程 */
-function restartNodeProject(pid, dirDist) {
-    if (process.platform.match(/win/i)) return restartNodeProject_win(pid, dirDist);
-    if (process.platform.match(/(linux|unix)/i)) return restartNodeProject_win(pid, dirDist);
+function restartNodeProject(pid, dirDist, target) {
+    if (process.platform.match(/win/i)) return restartNodeProject_win(pid, dirDist, target);
+    if (process.platform.match(/(linux|unix)/i)) return restartNodeProject_win(pid, dirDist, target);
 }
 
 /**
  * 重启项目Node进程在Windows操作系统下的实现
  * @os Windows
  */
-function restartNodeProject_win(pid, dirDist) {
+function restartNodeProject_win(pid, dirDist, target) {
     try {
         try {
             pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
@@ -191,8 +197,12 @@ function restartNodeProject_win(pid, dirDist) {
             // cmd += `|| "${path_to_node}" ./${file}.js 2>nul`; // 无法使用console.error()
             // cmd += `|| "${path_to_node}" ./${file}.js 2>nul <nul`;
             if (fs.existsSync(`${dirDist}/${file}.js`)) { // 找寻入口文件
-                // cmd += `&& "${path_to_node}" ./${file}.js <nul`; // 服务端程序通常是不需要交互的, 关闭输入流
-                cmd += `&& "${path_to_node/*此处必须使用双引号将Node引擎绝对路径包含,避免有空格*/}" ./${file}.js`; // 服务端程序需要交互
+                if (target === 'electron-main') {
+                    cmd += `&& electron ./${file}.js`; // 服务端程序需要交互
+                } else { // target === 'node'
+                    // cmd += `&& "${path_to_node}" ./${file}.js <nul`; // 服务端程序通常是不需要交互的, 关闭输入流
+                    cmd += `&& "${path_to_node/*此处必须使用双引号将Node引擎绝对路径包含,避免有空格*/}" ./${file}.js`; // 服务端程序需要交互
+                }
                 finded = true;
                 break;
             }
