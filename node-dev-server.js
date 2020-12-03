@@ -248,7 +248,7 @@ function repl() {
     rl.on('line', (input) => {
         if (input === 'rs') {
             console.log('重启应用程序...');
-            pid = restartNodeProject(pid, dirDist);
+            pid = restartNodeProject(pid, dirDist, finalConfig.target);
             pid !== -1 && console.log(`项目 ${project} 已重启, root PID: ${pid}`);
         }
     });
