@@ -135,7 +135,14 @@ yarn add -D @types/node
 
 ### Electron-main支持
 
-待定。
+建议全局安装`electron`，然后link到本地。必要时可在本地安装`@electron/typescript-definitions`以提供类型支持。
+electron渲染进程不需要使用nds，请使用：webpack-dev-server + webpack serve。
+```
+const CONFIG = {
+  target: 'electron-main',
+  ...
+}
+```
 
 
 ### About
