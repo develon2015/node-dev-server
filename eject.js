@@ -37,9 +37,8 @@ function eject$webpack_config_js() {
 
 function eject$tsconfig_json() {
     const filename = 'tsconfig.json';
-    const webpack_config_js = fs.readFileSync(path.resolve(__dirname, './public/tsconfig.json.template')).toString('utf-8');
-    const replace = webpack_config_js.replace('`@BABEL_LOADER`', JSON.stringify(`${DIR_NDS_MODULES}${path.sep}babel-loader`));
-    fs.writeFileSync(path.resolve(_project, filename), replace);
+    const tsconfig_json = fs.readFileSync(path.resolve(__dirname, './public/tsconfig.json.template')).toString('utf-8');
+    fs.writeFileSync(path.resolve(_project, filename), tsconfig_json);
 }
 
 function eject(project = process.cwd()) {
