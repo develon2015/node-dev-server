@@ -1,5 +1,5 @@
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const nds = require('./node-dev-server');
 const eject = require('./eject');
@@ -22,10 +22,10 @@ function create(project) {
 function init(project) {
     console.info(`Init project ${project}`);
     const DIR_SRC = path.resolve(project, 'src');
-    fs.mkdirSync(DIR_SRC); // dir: pro/src
-    fs.writeFileSync(path.resolve(DIR_SRC, 'index.ts'), `console.log('Hello, TypeScript!');\n`); // file: pro/src/index.ts
+    const DIR_SRC_TEMPLATE = path.resolve(__dirname, './public/src'); // src模板
+    fs.copySync(DIR_SRC_TEMPLATE, DIR_SRC);
     eject(project);
-    console.log(`Project init succeed! To continue, please:\n\ncd ${project}\nyarn init -y\nyarn add @types/node`);
+    console.log(`A electron-main project init succeed! To continue, please:\n\ncd ${project}\nyarn init -y\nyarn add @types/node`);
 }
 
 function main() {

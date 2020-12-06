@@ -118,12 +118,28 @@ Then you can see this output, and a new cmd.exe window running the project "uexp
 node-dev-server $ yarn install
 node-dev-server $ yarn link
 ```
+Note: Version `1.3.0` 增加了模块解析, 可以使用npm或yarn全局安装.
 
 然后，可以创建TypeScript项目了：
 ```
+$ nds create "app"
+app $ vi src/index.ts      #edit project entry
+app $ nds .                #compile and watch
+```
+or
+```
+$ mkdir app && cd app
+app $ yarn init -y         #initialize a Node.js project
+app$ nds init .            #init nds project
+app $ vi src/index.ts      #edit project entry
+app $ nds .                #compile and watch
+```
+or
+```
 app $ yarn init -y         #initialize a Node.js project
 app $ nds --eject          #eject TypeScript config
-app $ touch src/index.ts   #project entry
+app $ mkdir src
+app $ vi src/index.ts      #edit project entry
 app $ nds .                #compile and watch
 ```
 
@@ -135,8 +151,8 @@ yarn add -D @types/node
 
 ### Electron-main支持
 
-建议全局安装`electron`，然后link到本地。必要时可在本地安装`@electron/typescript-definitions`以提供类型支持。
-electron渲染进程不需要使用nds，请使用：webpack-dev-server + webpack serve。
+nds创建的模板项目自带类型声明文件`electron.d.ts`。必要时可全局安装`electron`，然后link到本地以提供相应版本的类型支持。
+要开发electron-main应用程序, 直接修改webpack配置文件的目标为`electron-main`, nds会使用`electron`而不是`node`来执行`dist/main.js`:
 ```
 const CONFIG = {
   target: 'electron-main',

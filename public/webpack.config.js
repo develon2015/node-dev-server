@@ -12,7 +12,7 @@ const DIR_DIST = path.resolve(DIR_PROJECT, 'dist');
 
 const CONFIG = {
     target: 'node', // 请本地安装开发依赖: @types/node
-    // target: 'electron-main', // electron主进程支持. 需要全局安装electron, 然后link到本地. 必要时可在本地安装@electron/typescript-definitions以提供类型支持
+    // target: 'electron-main', // electron主进程支持. 可以全局安装electron, 然后link到本地, 以提供相应版本的electron类型支持.
     // target: 'electron-renderer', // electron渲染进程不需要使用nds, 请使用: webpack-dev-server + webpack serve
     mode: 'none', // 开发时不建议使用默认值"production"
     // mode: 'development', // 开发模式

@@ -1,19 +1,20 @@
 const path = require('path');
 const fs = require('fs');
+const { resolveModule } = require('./resolve-module');
 
 const DIR_NDS = __dirname;
-const DIR_NDS_MODULES = path.resolve(DIR_NDS, 'node_modules');
+// const DIR_NDS_MODULES = path.resolve(DIR_NDS, 'node_modules');
 
 let _project = '.';
 
 function eject$babel_config_json() {
     const babel_config_json = {
         "plugins": [
-            `${DIR_NDS_MODULES}${path.sep}@babel/plugin-proposal-class-properties`
+            resolveModule('@babel/plugin-proposal-class-properties'),
         ],
         "presets": [
             [
-                `${DIR_NDS_MODULES}${path.sep}@babel/preset-env`,
+                resolveModule('@babel/preset-env'),
                 {
                     "targets": {
                         "esmodules": true
@@ -21,8 +22,8 @@ function eject$babel_config_json() {
                 }
             ],
             [
-                `${DIR_NDS_MODULES}${path.sep}@babel/preset-typescript`
-            ]
+                resolveModule('@babel/preset-typescript'),
+            ],
         ]
     };
     fs.writeFileSync(path.resolve(_project, 'babel.config.json'), JSON.stringify(babel_config_json, null, 2));
@@ -31,7 +32,7 @@ function eject$babel_config_json() {
 function eject$webpack_config_js() {
     const filename = 'webpack.config.js';
     const webpack_config_js = fs.readFileSync(path.resolve(__dirname, './public/webpack.config.js')).toString('utf-8');
-    const replace = webpack_config_js.replace('`@BABEL_LOADER`', JSON.stringify(`${DIR_NDS_MODULES}${path.sep}babel-loader`));
+    const replace = webpack_config_js.replace('`@BABEL_LOADER`', JSON.stringify(resolveModule('babel-loader')));
     fs.writeFileSync(path.resolve(_project, filename), replace);
 }
 
