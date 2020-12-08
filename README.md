@@ -45,6 +45,11 @@ or
 $ npm install --global @develon/node-dev-server
 ```
 
+Version `1.3.0` 增加了模块解析, 需要全局安装`webpack`以及`webpack-cli`:
+```
+$ yarn global add webpack webpack-cli
+```
+
 
 ## Usage
 
@@ -111,16 +116,7 @@ Then you can see this output, and a new cmd.exe window running the project "uexp
 
 ### 开箱即用的TypeScript支持
 
-首先，为了确保`babel-loader`及其插件(`plugins`)和预设(`presets`)都在nds的`node_modules`目录下，我们需要通过源码安装nds：
-```
-~ $ git clone https://github.com/develon2015/node-dev-server
-~ $ cd node-dev-server
-node-dev-server $ yarn install
-node-dev-server $ yarn link
-```
-Note: Version `1.3.0` 增加了模块解析, 可以使用npm或yarn全局安装.
-
-然后，可以创建TypeScript项目了：
+创建TypeScript项目：
 ```
 $ nds create "app"
 app $ vi src/index.ts      #edit project entry
