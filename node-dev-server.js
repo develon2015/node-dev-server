@@ -1,4 +1,7 @@
-const webpack = require('webpack');
+const { resolveModule } = require('./resolve-module');
+const path_to_webpack = resolveModule('webpack');
+const webpack = require(path_to_webpack);
+
 const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
