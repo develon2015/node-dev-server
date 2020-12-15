@@ -3,6 +3,7 @@
  *
  * @author Develon (https://github.com/develon2015)
  */
+const $babel_loader = require('./nds-babel.js'); // nds plugin
 
 const path = require('path');
 
@@ -28,7 +29,7 @@ const CONFIG = {
     },
     module: {
         rules: [
-            { test: /\.tsx?$/, exclude: /node_modules/, loader: `@BABEL_LOADER` }, // @BABEL_LOADER及其预设由nds提供
+            { test: /\.tsx?$/, exclude: /node_modules/, use: $babel_loader }, // @BABEL_LOADER及其预设由nds提供
         ],
     },
     resolve: {

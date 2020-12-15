@@ -21,11 +21,11 @@ function create(project) {
  */
 function init(project) {
     console.info(`Init project ${project}`);
-    const DIR_SRC = path.resolve(project, 'src');
-    const DIR_SRC_TEMPLATE = path.resolve(__dirname, './public/src'); // src模板
-    fs.copySync(DIR_SRC_TEMPLATE, DIR_SRC);
-    eject(project);
-    console.log(`A electron-main project init succeed! To continue, please:\n\ncd ${project}\nyarn init -y\nyarn add @types/node`);
+    const DIR_APP = path.resolve(project, '.');
+    const DIR_SRC_TEMPLATE = path.resolve(__dirname, './public/app'); // 项目模板
+    fs.copySync(DIR_SRC_TEMPLATE, DIR_APP);
+    // eject(project);
+    console.log(`A electron-main project init succeed! To continue, please:\n\ncd ${project}\nyarn setup`);
 }
 
 function main() {
