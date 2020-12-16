@@ -22,9 +22,9 @@ function create(project) {
 function init(project) {
     console.info(`Init project ${project}`);
     const DIR_APP = path.resolve(project, '.');
-    const DIR_SRC_TEMPLATE = path.resolve(__dirname, './public/app'); // 项目模板
-    fs.copySync(DIR_SRC_TEMPLATE, DIR_APP);
-    // eject(project);
+    const DIR_APP_TEMPLATE = path.resolve(__dirname, './public/app'); // 项目模板
+    fs.copySync(DIR_APP_TEMPLATE, DIR_APP);
+    eject(project);
     console.log(`A electron-main project init succeed! To continue, please:\n\ncd ${project}\nyarn setup`);
 }
 
