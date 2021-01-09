@@ -176,7 +176,74 @@ function nds() {
 /** 重启项目Node进程 */
 function restartNodeProject(pid, dirDist, target) {
     if (process.platform.match(/win/i)) return restartNodeProject_win(pid, dirDist, target);
-    if (process.platform.match(/(linux|unix)/i)) return restartNodeProject_win(pid, dirDist, target);
+    if (process.platform.match(/(linux|unix)/i)) return restartNodeProject_linux(pid, dirDist, target);
+}
+
+/**
+ * 重启项目Node进程在Linux操作系统下的实现
+ * @os Linux
+ */
+function restartNodeProject_linux(pid, dirDist, target) {
+    try {
+        try {
+            pid !== -1 && process.kill(pid, 'SIGKILL');
+            // pid !== -1 && child_process.execSync(`kill -9 ${pid}`);
+        } catch (error) {
+            console.error(`杀进程失败, 请自行确认`);
+        }
+        // 构建cmd命令, 进入dist目录执行main.js或index.js或者bundle.js等目标
+        let cmd = `cd "${dirDist}" `;
+        let finded = false;
+        let files = ['main', 'index', 'bundle'];
+        for (file of files) {
+            if (fs.existsSync(`${dirDist}/${file}.js`)) { // 找寻入口文件
+                if (target === 'electron-main') {
+                    cmd += `&& electron ./${file}.js`;
+                } else { // target === 'node'
+                    cmd += `&& "${path_to_node/*此处必须使用双引号将Node引擎绝对路径包含,避免有空格*/}" ./${file}.js`;
+                }
+                finded = true;
+                break;
+            }
+        }
+        if (!finded) throw new Error(`输出目录下没有发现以下任何一个可执行文件：${files.join('.js ')}.js`);
+        // bash 与 gnome-terminal 无关，它由 /usr/lib/gnome-terminal/gnome-terminal-server 产生:
+        //     sh -> gnome-terminal --!--> gnome-terminal-server -> bash
+        // 使用单命令注释 ": nds{${process.pid}};" 标记进程
+        const newCmd = `exec gnome-terminal -e 'bash -c ": By nds@${process.pid}; ${cmd.replace(/"/g, '\\"')}; echo Please press Enter to exit...; read"'`;
+        console.log(newCmd);
+        // 启动shell执行命令
+        // 同步的。因为execSync会先调用python3，再调用sh等shell执行该newCmd命令，直到有shell成功执行或者全部shell尝试失败
+        child_process.execSync(newCmd);
+        try {
+            // 查询node进程pid
+            let grep = child_process.execSync(`ps -ef | grep nds@${process.pid}`)
+                .toString()
+                .split('\n');
+            // console.log('grep result:\n' + grep.join('\n'));
+
+            // user   31730 30243  0 01:52 pts/22   00:00:00 bash -c : nds@31659; cd "/home/user/test/a b/dist" && "/snap/node/2690/bin/node" ./main.js; echo Please press Enter to exit...; read
+            //            |     |                                            |
+            //            |    PID of gnome-terminal-server                 PID of node-dev-server
+            //            |
+            //           PID of bash
+            for (let i = 0; i < grep.length; i++) {
+                let group = grep[i].match(/^.*?\s+(.*?)\s+(.*?)\s+.*: By nds@\d+.*$/);
+                if (group) {
+                    let pid = group[1];
+                    return pid;
+                }
+            }
+            throw new Error('grep result:\n' + grep.join('\n'));
+        } catch (error) {
+            console.error(error.message);
+            console.error('无法查询bash进程PID');
+        }
+    } catch (error) {
+        console.error(error.message);
+        console.error('启动失败');
+    }
+    return -1;
 }
 
 /**
@@ -252,7 +319,7 @@ function repl() {
         if (input === 'rs') {
             console.log('重启应用程序...');
             pid = restartNodeProject(pid, dirDist, finalConfig.target);
-            pid !== -1 && console.log(`项目 ${project} 已重启, root PID: ${pid}`);
+            pid !== -1 && console.info(`项目 ${project} 已重启, root PID: ${pid}`);
         }
     });
     // rl.on('SIGINT', () => { // ^C 中断
@@ -263,7 +330,7 @@ function repl() {
                 // pid属于cmd进程, 因此需要针对平台杀进程树
                 pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T 2>nul`); // "/T"参数非常关键, 配合"start /WAIT"命令
             } else {
-                pid !== -1 && process.kill(pid, 'SIGINT');
+                pid !== -1 && process.kill(pid, 'SIGKILL');
             }
         } catch (error) {
             console.error(error.message);
