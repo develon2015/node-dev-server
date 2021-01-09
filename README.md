@@ -29,7 +29,7 @@ Why not use the [nodemon](https://github.com/remy/nodemon)?
 
 1. We use webpack5, not simply watch the OS File-System events;
 
-2. We can kill already exists process, compile and restart a cmd.exe window on source-code changes.
+2. We can kill existing process (tree), compile and restart a cmd.exe window of a terminal on source-code changes.
 
 (Only implemented on the Windows OS currently, and Gnome-terminal)
 
