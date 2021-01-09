@@ -31,7 +31,7 @@ Why not use the [nodemon](https://github.com/remy/nodemon)?
 
 2. We can kill already exists process, compile and restart a cmd.exe window on source-code changes.
 
-(Only implemented on the Windows OS currently)
+(Only implemented on the Windows OS currently, and Gnome-terminal)
 
 
 ## Install
@@ -118,7 +118,9 @@ Then you can see this output, and a new cmd.exe window running the project "uexp
 
 创建TypeScript项目：
 ```
-$ nds create "app"
+$ nds create "app" && cd "app"
+
+app $ yarn setup
 app $ vi src/index.ts      #edit project entry
 app $ nds .                #compile and watch
 ```
@@ -126,22 +128,17 @@ or
 ```
 $ mkdir app && cd app
 app $ yarn init -y         #initialize a Node.js project
-app$ nds init .            #init nds project
-app $ vi src/index.ts      #edit project entry
-app $ nds .                #compile and watch
-```
-or
-```
-app $ yarn init -y         #initialize a Node.js project
-app $ nds --eject          #eject TypeScript config
-app $ mkdir src
+
+app $ nds init .           #init nds project
+
+app $ yarn setup
 app $ vi src/index.ts      #edit project entry
 app $ nds .                #compile and watch
 ```
 
-当然，别忘了添加types：
+脚本`yarn setup`做了什么事？它主要弹出一个与用户环境相关的js模块——`nds-babel.js`：
 ```
-yarn add -D @types/node
+nds --eject && yarn add -D @types/node
 ```
 
 
