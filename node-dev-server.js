@@ -210,7 +210,10 @@ function restartNodeProject_linux(pid, dirDist, target) {
         // bash 与 gnome-terminal 无关，它由 /usr/lib/gnome-terminal/gnome-terminal-server 产生:
         //     sh -> gnome-terminal --!--> gnome-terminal-server -> bash
         // 使用单命令注释 ": nds{${process.pid}};" 标记进程
-        const newCmd = `exec gnome-terminal -e 'bash -c ": By nds@${process.pid}; ${cmd.replace(/"/g, '\\"')}; echo Please press Enter to exit...; read"'`;
+        // const newCmd = `exec gnome-terminal -e 'bash -c ": By nds@${process.pid}; ${cmd.replace(/"/g, '\\"')}; echo Please press Enter to exit...; read"'`;
+        // 参数“-e”弃用并可能在 gnome-terminal 的后续版本中移除。使用“--”以结束选项并将要执行的命令行追加至其后。
+        // const newCmd = `exec gnome-terminal -- bash -c ": By nds@${process.pid}; ${cmd.replace(/"/g, '\\"')}; echo Please press Enter to exit...; read"`;
+        const newCmd = `exec gnome-terminal -- bash -c ': By nds@${process.pid}; ${cmd}; echo Please press Enter to exit...; read'`;
         console.log(newCmd);
         // 启动shell执行命令
         // 同步的。因为execSync会先调用python3，再调用sh等shell执行该newCmd命令，直到有shell成功执行或者全部shell尝试失败
