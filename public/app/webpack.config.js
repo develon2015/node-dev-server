@@ -11,6 +11,9 @@ const DIR_PROJECT = path.resolve(__dirname, '.');
 const DIR_SRC = path.resolve(DIR_PROJECT, 'src');
 const DIR_DIST = path.resolve(DIR_PROJECT, 'dist');
 
+/**
+ * @type {import('webpack').Configuration}
+ */
 const CONFIG = {
     target: 'node', // 请本地安装开发依赖: @types/node
     // target: 'electron-main', // electron主进程支持. 可以全局安装electron, 然后link到本地, 以提供相应版本的electron类型支持.
