@@ -54,7 +54,7 @@ let finalConfig = {};
  * 在webpack-cli中, argv将被传为config(env, argv)函数形参 -- argv.entry, 并强制改写最终的config对象的entry字段
  * @param {string[]} argv Node进程命令行参数
  */
-function callWebpack(argv) {
+function callWebpack(argv, just) {
     project = path.resolve(process.cwd(), argv.length < 1 ? '.' : argv[0]);
     console.info('项目根目录:', project);
     if (!fs.existsSync(project)) throw new Error('工程不存在！');
@@ -135,8 +135,10 @@ function callWebpack(argv) {
             }
             if (state.compilation.errors.length === 0) {
                 console.info('编译完成！');
-                pid = restartNodeProject(pid, dirDist, mergedConfig.target);
-                pid !== -1 && console.info(`项目 ${projectName} 已启动, root PID：${pid}`);
+                if (!!!just) { // 是否仅编译，不运行
+                    pid = restartNodeProject(pid, dirDist, mergedConfig.target);
+                    pid !== -1 && console.info(`项目 ${projectName} 已启动, root PID：${pid}`);
+                }
             } else {
                 console.error('编译失败！');
                 state.compilation.errors.forEach(it => {
@@ -162,11 +164,11 @@ function callWebpack(argv) {
  * 
  * $ nds [dir_project]
  */
-function nds() {
+function nds(just = false) {
     process.title = 'node-dev-server';
     process.once('SIGINT', onSIGINT); // 监听^C事件
     try {
-        callWebpack(process.argv.splice(2)); // node[.exe] path_to_watch.js ...param
+        callWebpack(process.argv.splice(just ? 3 : 2), just); // node[.exe] path_to_watch.js ...param
         watch && repl();
     } catch (error) {
         console.error(error.message);

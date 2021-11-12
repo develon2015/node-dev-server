@@ -69,6 +69,13 @@ function main() {
             version();
             break;
         }
+        case '-j':
+        case '-just':
+        case '--just': {
+            consoleHook();
+            nds(true);
+            break;
+        }
         default: {
             consoleHook();
             nds();
@@ -88,6 +95,7 @@ Usage: nds [options] [project]
            -c, --create         Create a TypeScript project and init it
            -i, --init           Init a TypeScript project
            -ej, --eject         Eject the TypeScript supported configuration file
+           -j, --just           Just auto compile, don't run
            -v, --version        Display version of node-dev-server
            -h, --help           Display help for command`;
     _log(info);
