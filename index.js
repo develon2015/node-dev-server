@@ -76,6 +76,13 @@ function main() {
             nds(true);
             break;
         }
+        case '-n':
+        case '-ng':
+        case '--no-gnome': {
+            consoleHook();
+            nds(false, true);
+            break;
+        }
         default: {
             consoleHook();
             nds();

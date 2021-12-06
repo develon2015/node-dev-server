@@ -5,6 +5,7 @@ const webpack = require(path_to_webpack);
 const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { _log } = require('./console-hook');
 
 /**
  * 项目根目录
@@ -164,11 +165,12 @@ function callWebpack(argv, just) {
  * 
  * $ nds [dir_project]
  */
-function nds(just = false) {
+function nds(just = false, no_gnome = false) {
     process.title = 'node-dev-server';
     process.once('SIGINT', onSIGINT); // 监听^C事件
     try {
-        callWebpack(process.argv.splice(just ? 3 : 2), just); // node[.exe] path_to_watch.js ...param
+        globalThis.no_gnome = no_gnome;
+        callWebpack(process.argv.splice(just || no_gnome ? 3 : 2), just); // node[.exe] path_to_watch.js ...param
         watch && repl();
     } catch (error) {
         console.error(error.message);
@@ -177,8 +179,48 @@ function nds(just = false) {
 
 /** 重启项目Node进程 */
 function restartNodeProject(pid, dirDist, target) {
+    if (globalThis.no_gnome) return restartNodeProject_linux_without_gnome(pid, dirDist, target);
     if (process.platform.match(/win/i)) return restartNodeProject_win(pid, dirDist, target);
     if (process.platform.match(/(linux|unix)/i)) return restartNodeProject_linux(pid, dirDist, target);
+}
+
+/**
+ * 重启项目Node进程在不依赖Gnome桌面的Linux操作系统下的控制台实现
+ * @os Linux
+ */
+function restartNodeProject_linux_without_gnome(pid, dirDist, target) {
+    try {
+        try {
+            pid !== -1 && process.kill(pid, 'SIGKILL');
+            // pid !== -1 && child_process.execSync(`kill -9 ${pid}`);
+        } catch (error) {
+            console.error(`杀进程失败, 请自行确认`);
+        }
+        let fname = ``;
+        let finded = false;
+        let files = ['main', 'index', 'bundle'];
+        for (file of files) {
+            if (fs.existsSync(`${dirDist}/${file}.js`)) { // 找寻入口文件
+                fname = `${file}.js`;
+                finded = true;
+                break;
+            }
+        }
+        if (!finded) throw new Error(`输出目录下没有发现以下任何一个可执行文件：${files.join('.js ')}.js`);
+        // 启动shell执行命令
+        let node_process = child_process.spawn(
+            target === 'electron-main' ? 'electron' : path_to_node,
+            [fname], {
+                cwd: dirDist,
+                stdio: ['inherit', 'inherit', 'inherit'],
+            }
+        );
+        return node_process.pid;
+    } catch (error) {
+        console.error(error.message);
+        console.error('启动失败');
+    }
+    return -1;
 }
 
 /**
@@ -314,6 +356,7 @@ function onSIGINT() {
  * 交互界面
  */
 function repl() {
+    if (globalThis.no_gnome) return;
     const readline = require('readline');
 
     const rl = readline.createInterface({
