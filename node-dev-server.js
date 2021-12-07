@@ -356,7 +356,7 @@ function onSIGINT() {
  * 交互界面
  */
 function repl() {
-    if (globalThis.no_gnome) return;
+    // if (globalThis.no_gnome) return;
     const readline = require('readline');
 
     const rl = readline.createInterface({
