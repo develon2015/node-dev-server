@@ -191,8 +191,11 @@ function restartNodeProject(pid, dirDist, target) {
 function restartNodeProject_linux_without_gnome(pid, dirDist, target) {
     try {
         try {
-            pid !== -1 && process.kill(pid, 'SIGKILL');
-            // pid !== -1 && child_process.execSync(`kill -9 ${pid}`);
+            if (process.platform.match(/win/i)) {
+                pid !== -1 && child_process.execSync(`taskkill /F /PID ${pid} /T`); // "/T"参数非常关键, 配合"start /WAIT"命令
+            } else {
+                pid !== -1 && process.kill(pid, 'SIGKILL');
+            }
         } catch (error) {
             console.error(`杀进程失败, 请自行确认`);
         }
@@ -208,6 +211,25 @@ function restartNodeProject_linux_without_gnome(pid, dirDist, target) {
         }
         if (!finded) throw new Error(`输出目录下没有发现以下任何一个可执行文件：${files.join('.js ')}.js`);
         // 启动shell执行命令
+        if (process.platform.match(/win/i)) { // Windows
+            let node_process = target === 'electron-main' ?
+                child_process.spawn(
+                    'cmd',
+                    ['/c', 'electron', fname], {
+                        cwd: dirDist,
+                        stdio: ['inherit', 'inherit', 'inherit'],
+                    }
+                ) :
+                child_process.spawn(
+                    path_to_node,
+                    [fname], {
+                        cwd: dirDist,
+                        stdio: ['inherit', 'inherit', 'inherit'],
+                    }
+                );
+            return node_process.pid;
+        }
+        // Linux
         let node_process = child_process.spawn(
             target === 'electron-main' ? 'electron' : path_to_node,
             [fname], {
