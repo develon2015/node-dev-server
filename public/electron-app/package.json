@@ -1,0 +1,12 @@
+{
+    "name": "app",
+    "version": "1.0.0",
+    "main": "dist/main.js",
+    "scripts": {
+        "setup": "nds --eject && yarn add -D @types/node file-loader",
+        "start:dev": "nds",
+        "build": "webpack --env production",
+        "rebuild": "webpack --env rebuild"
+    },
+    "license": "MIT"
+}

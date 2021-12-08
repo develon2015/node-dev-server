@@ -9,10 +9,15 @@
 
 <body>
     <div id="app">
-        <h1>
+        <h1 id="info">
             Hello, Electron with TypeScirpt!
         </h1>
+        <p id="output">Click it to see the effect in this interface.</p>
+        <button onclick="notify()">Test</button>
+        <button onclick="exit()">Exit</button>
     </div>
+
+    <script src="renderer.js"></script>
 </body>
 
 </html>

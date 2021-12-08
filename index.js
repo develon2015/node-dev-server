@@ -22,7 +22,7 @@ function create(project) {
 function init(project) {
     console.info(`Init project ${project}`);
     const DIR_APP = path.resolve(project, '.');
-    const DIR_APP_TEMPLATE = path.resolve(__dirname, './public/app'); // 项目模板
+    const DIR_APP_TEMPLATE = path.resolve(__dirname, `./public/${globalThis.kind === 'electron' ? 'electron-app' : 'node-app'}`); // 项目模板
     fs.copySync(DIR_APP_TEMPLATE, DIR_APP);
     eject(project);
     console.log(`A electron-main project init succeed! To continue, please:\n\ncd ${project}\nyarn setup`);
@@ -36,6 +36,9 @@ function main() {
             consoleHook();
             init(path.resolve(process.cwd(), process.argv[3] || '.'));
             break;
+        }
+        case '-ce': {
+            globalThis.kind = 'electron';
         }
         case '-c':
         case 'create':

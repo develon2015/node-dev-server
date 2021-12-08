@@ -43,7 +43,7 @@ function excludeNodeModules({ context, request }, callback) { // 官网和CLI提
                 let instruction = `require('${request}')`;
                 console.log('运行时模块:', `${request}由node_modules提供 => ${request} = ${instruction}`);
                 if (_libraryTarget === 'umd' || _libraryTarget === 'commonjs' || _libraryTarget === 'commonjs2') {
-                    console.info('UMD 或 CommonJS 模式');
+                    // console.info('UMD 或 CommonJS 模式');
                     return void callback(/*没有错误*/null, request); // 直接返回模块名, 而无需通过callback返回字符串`require(${request})`
                 }
                 return void callback(/*没有错误*/null, instruction);
