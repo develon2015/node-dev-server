@@ -30,6 +30,9 @@ function init(project) {
 
 function main() {
     switch (process.argv[2]) {
+        case '-ie': {
+            globalThis.kind = 'electron';
+        }
         case '-i':
         case 'init':
         case '--init': { // Init cwd() or a project
@@ -103,7 +106,9 @@ Usage: nds [options] [project]
        Options:
            [project]            The project directory
            -c, --create         Create a TypeScript project and init it
+               -ce              electron
            -i, --init           Init a TypeScript project
+               -ie              electron
            -ej, --eject         Eject the TypeScript supported configuration file
            -j, --just           Just auto compile, don't run
            -v, --version        Display version of node-dev-server
