@@ -41,13 +41,43 @@ let pid = -1; // Node进程
  */
 let dirDist = process.cwd;
 /**
+ * win32平台使用快捷键 Control+R 来编译项目
+ */
+let isWin32 = process.platform.match(/win/i);
+/**
  * 是否监测
  */
-let watch = true;
+let watch = isWin32 ? false : true;
 /**
  * 最终的webpack配置
  */
 let finalConfig = {};
+
+function injectDLL() {
+    const child_process = require('child_process');
+    if (!isWin32) { // win32
+        return false;
+    }
+    try {
+        var exe = __dirname + String.raw`.\bin\DllInjector.exe`;
+        var pid = process.pid;
+        var target = __dirname + String.raw`.\bin\hook.dll`;
+        child_process.execSync(`${exe} ${pid} ${target}`);
+    } catch (error) {
+        return false;
+    }
+    return true;
+}
+
+function keyboradListen(action) {
+    const net = require('net');
+    var server = new net.Server();
+    server.listen(4444, () => { });
+    server.on('connection', (stream) => {
+        action();
+        stream.destroy();
+    });
+}
 
 /**
  * 调用webpack API, 构建自己的CLI工具
@@ -129,7 +159,11 @@ function callWebpack(argv, just) {
         // state包含编译时间、编译hash等信息。
         // 如果传给webpack() API的第一个参数是数组，则error为ValidationError时至少有一个配置对象不合法
         // 同时state同样是对应的数组: MultiStatsMultiStats { stats: [ Stats { compilation: [Compilation] }, Stats { compilation: [Compilation] } ] }
-        let compiler = webpack(mergedConfig, (error, state) => {
+        const is_dll_injected = injectDLL();
+        if (!is_dll_injected) {
+            mergedConfig.watch = true; // 如果没有成功注入dll, 则开启监测
+        }
+        let compiler = () => webpack(mergedConfig, (error, state) => {
             if (error) { // Webpack配置出错, 强制结束node-dev-server
                 console.error(error.message);
                 forceExit('配置出错, Webpack拒绝编译');
@@ -151,10 +185,13 @@ function callWebpack(argv, just) {
             console.log(`耗时：${(state.compilation.endTime - state.compilation.startTime)} ms`);
             if (watch) {
                 console.log(`等待文件变化，或使用命令“rs"重启程序`);
-            } else {
-                console.log('未启用监听，等待程序结束...');
             }
         });
+        compiler();
+        if (isWin32 && is_dll_injected) {
+            console.log(`按下快捷键 Contorl+R 编译，或使用命令“rs"重启程序`);
+            keyboradListen(compiler);
+        }
     }).catch((error) => {
         forceExit(error.message);
     });
@@ -171,7 +208,8 @@ function nds(just = false, no_gnome = false) {
     try {
         globalThis.no_gnome = no_gnome;
         callWebpack(process.argv.splice(just || no_gnome ? 3 : 2), just); // node[.exe] path_to_watch.js ...param
-        watch && repl();
+        // watch && repl();
+        repl();
     } catch (error) {
         console.error(error.message);
     }
