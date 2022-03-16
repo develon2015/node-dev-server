@@ -20,6 +20,12 @@ extern "C" {
     ) -> i32;
     fn TranslateMessage(lpMsg: *const u8) -> i32;
     fn DispatchMessageW(lpMsg: *const u8) -> i32;
+    fn CallNextHookEx(
+        hhk: *const c_void,
+        nCode: i32,
+        wParam: u64,
+        lParam: *const u8,
+    ) -> i64;
 }
 
 type HookProc = extern "C" fn (nCode: i32, wParam: u64, lParam: *const u8) -> i64;
@@ -57,6 +63,7 @@ extern "C" fn callback(
                     if let Err(e) = std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(100)) {
                         println!("{}", e);
                     }
+                    return 1; // 取消默认操作
                 }
             } else if wParam == WM_SYSKEYUP || wParam == WM_KEYUP {
                 if kb.vkCode == VK_LCONTROL {
@@ -64,8 +71,8 @@ extern "C" fn callback(
                 }
             }
         }
+        CallNextHookEx(null(), nCode, wParam, lParam)
     }
-    0
 }
 
 fn hook() {
